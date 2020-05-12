@@ -5,7 +5,7 @@
   void yyerror(const char * msg);
 %}
 
-%token  AND OR NOT TRUE FALSE IF THEN ELSE ENDIF WHILE DO BEGINLOOP ENDLOOP FOREACH IN CONTINUE FUNCTION RETURN BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY OF READ WRITE ADD SUB MULT DIV MOD EQ ASSIGN NEQ LT GT LTE GTE L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET SEMICOLON COLON COMMA NUMBER IDENT
+%token  AND OR NOT TRUE FALSE IF THEN ELSE ENDIF WHILE DO BEGINLOOP ENDLOOP FOR FOREACH IN CONTINUE FUNCTION RETURN BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY OF READ WRITE ADD SUB MULT DIV MOD EQ ASSIGN NEQ LT GT LTE GTE L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET SEMICOLON COLON COMMA NUMBER IDENT
 
 %start program
 
@@ -19,34 +19,54 @@ functions: /*epsilon*/
             {printf("functions -> epsilon\n");}
           | function functions
             {printf("functions -> function functions\n");}
+          ;
 
 function: FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY
           {printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY\n");}
-
-array: R_SQUARE_BRACKET ARRAY L_SQUARE_BRACKET array
-        {printf("array -> R_SQUARE_BRACKET  ARRAY L_SQUARE_BRACKET array\n");}
-       | /*epsilon*/
-        {printf("array -> epsilon\n");}
+          ;
 
 declarations: declaration SEMICOLON declarations 
               {printf("declarations -> declaration SEMICOLON declarations\n");}
              | /*epsilon*/
               {printf("declarations -> epsilon\n");}
+              ;
+
 
 declaration: IDENT COMMA declaration
               {printf("decleration -> IDENT COMMA declaration\n");}
              | IDENT COLON INTEGER
               {printf("declaration -> IDENT COLON NUMBER\n");}
-             | IDENT COLON array OF INTEGER
-              {printf("declaration -> IDENT COLON array OF INTEGER\n");}
+             | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER
+              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");}
+             | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER
+              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");}
+              ;
 
-statements: statement statements
-            { printf("statements -> statement statements\n");}
+statements: statement SEMICOLON statements
+            { printf("statements -> statement SEMICOLON statements\n");}
             | /*epsilon*/
             {printf("statements -> epsilon\n"); }
 
 statement: var ASSIGN expression
            {printf("statement -> var ASSIGN expression\n");}
+           | IF bool-expr THEN statements ENDIF
+           {printf("statement -> IF bool-expr THEN statements ENDIF\n");}
+           | IF bool-expr THEN statements ELSE statements ENDIF
+           {printf("statement -> IF bool-expr THEN statements ELSE statements ENDIF \n");}
+           | WHILE bool-expr BEGINLOOP statements ENDLOOP
+           {printf("statement -> WHILE bool-expr BEGINLOOP statements ENDLOOP \n");}
+           | DO BEGINLOOP statements ENDLOOP WHILE bool-expr
+           {printf("statement -> DO BEGINLOOP statements ENDLOOP WHILE bool-expr\n");}
+           | FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP
+           {printf("statement -> FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP\n");}
+           | READ vars
+           {printf("statement -> READ vars\n");}
+           | WRITE vars
+           {printf("statement -> WRITE vars \n");}
+           | CONTINUE
+           {printf("statement -> CONTINUE\n");}
+           | RETURN expression
+           {printf("statement -> RETURN expression\n");}
 
 term: var
       {printf("term -> var\n");}
@@ -66,23 +86,33 @@ multiplicative_expression: term MULT multiplicative_expression
                            | term
                            {printf("multiplicative_expression -> term\n");}
 
-nots: NOT nots
-      {printf("nots -> NOT nots\n");}
-      | NOT
-      {printf("nots -> NOT\n");}
-      | /**/
-      {printf("nots -> epsilon\n");}
-relation-expr_0: nots relation_expr
-                  {printf("relation-expr_0 -> nots relation_expr\n");}
+bool-expr: relation-and-expr OR bool-expr
+            {printf("bool-expr -> relation-and-expr OR bool-expr\n");}
+            | relation-and-expr
+            {printf("bool-expr -> relation-and-expr\n");}
 
-relation_expr: expression comp expression
+relation-and-expr: relation-expr AND relation-and-expr
+                    {printf("relation-and-expr -> relation-expr_0 AND relation-and-expr\n");}
+                    | relation-expr
+                    {printf("relation-and-expr -> relation-expr_0\n");}
+
+
+relation-expr: expression comp expression
                 {printf("relation_expr -> expression comp expression\n");}
+                | NOT expression comp expression
+                {printf("relation_expr -> NOT expression comp expression\n");}
                 | TRUE
                 {printf("relation_expr -> TRUE\n" );}
                 | FALSE
                 {printf("relation_expr -> FALSE\n");}
+                | NOT TRUE
+                {printf("relation_expr -> NOT TRUE\n" );}
+                | NOT FALSE
+                {printf("relation_expr -> NOT FALSE\n");}
                 | L_PAREN bool-expr R_PAREN
                 {printf("relation_expr -> L_PAREN bool-expr R_PAREN\n");}
+                | NOT L_PAREN bool-expr R_PAREN
+                {printf("relation_expr -> NOT L_PAREN bool-expr R_PAREN\n");}
 
 comp: EQ
       {printf("comp -> EQ\n");}
@@ -122,7 +152,10 @@ vars: var COMMA vars
 var: IDENT
     {printf("var -> IDENT\n");}
     |
-    IDENT R_SQUARE_BRACKET expressions
+    IDENT R_SQUARE_BRACKET expressions L_SQUARE_BRACKET
+    {printf("var -> IDENT R_SQUARE_BRACKET expressions L_SQUARE_BRACKET\n");}
+    | IDENT R_SQUARE_BRACKET expressions L_SQUARE_BRACKET R_SQUARE_BRACKET expressions L_SQUARE_BRACKET
+    {printf("var -> IDENT R_SQUARE_BRACKET expressions L_SQUARE_BRACKET R_SQUARE_BRACKET expressions L_SQUARE_BRACKET\n");}
 
 
 
