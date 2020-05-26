@@ -945,7 +945,7 @@ YY_RULE_SETUP
 case 22:
 YY_RULE_SETUP
 #line 150 "mini_l.lex"
-{linePos += yyleng; return NUMBER;}
+{linePos += yyleng; yylval.dval = atof(yytext); return NUMBER;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
@@ -965,14 +965,17 @@ YY_RULE_SETUP
     }
   }
 
-  if (!isReservedWord)  return IDENT; //printf("IDENT %s\n", yytext);
+  if (!isReservedWord)  {
+    yylval.ival = (yytext);
+    return IDENT; //printf("IDENT %s\n", yytext);
+  }
 
   linePos += yyleng;
 }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 173 "mini_l.lex"
+#line 176 "mini_l.lex"
 {
 
   printf("Error at line %d:%d. Cannot start identifier with a number: %s\n", lineNum, linePos, yytext); exit(-1);
@@ -980,7 +983,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 179 "mini_l.lex"
+#line 182 "mini_l.lex"
 {
    printf("Error at line %d:%d. Cannot end with an underscode: %s\n", lineNum, linePos, yytext); exit(-1);
 }
@@ -988,20 +991,20 @@ YY_RULE_SETUP
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 183 "mini_l.lex"
+#line 186 "mini_l.lex"
 { lineNum++; linePos = 0;  }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 186 "mini_l.lex"
+#line 189 "mini_l.lex"
 {printf("Error at line %d:%d. Unrecognized input: %s\n", lineNum, linePos, yytext); exit(-1); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 188 "mini_l.lex"
+#line 191 "mini_l.lex"
 ECHO;
 	YY_BREAK
-#line 1005 "lex.yy.c"
+#line 1008 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2006,6 +2009,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 188 "mini_l.lex"
+#line 191 "mini_l.lex"
 
 

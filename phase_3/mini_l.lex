@@ -21,6 +21,7 @@
     "beginloop", 
     "endloop",
 
+    "for",
     "foreach", 
     "in", 
     "continue",
@@ -62,6 +63,7 @@
     "BEGINLOOP", 
     "ENDLOOP",
 
+    "FOR",
     "FOREACH", 
     "IN", 
     "CONTINUE",
@@ -85,7 +87,7 @@
     "READ", 
     "WRITE"};
   
-  const int reservedWordNum = 29;
+  const int reservedWordNum = 30;
 %}
 
 /* Regex */
@@ -145,7 +147,7 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
 
 [\t ]+ { linePos += yyleng;}
 
-{NUMBER} {linePos += yyleng; return NUMBER;}
+{NUMBER} {linePos += yyleng; yylval.dval = atof(yytext); return NUMBER;}
 
 {LETTER}({CHARACTER}*{CHAR_NO_SCORE})? {
 
@@ -162,7 +164,10 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
     }
   }
 
-  if (!isReservedWord)  return IDENT; //printf("IDENT %s\n", yytext);
+  if (!isReservedWord)  {
+    yylval.ival = (yytext);
+    return IDENT; //printf("IDENT %s\n", yytext);
+  }
 
   linePos += yyleng;
 }

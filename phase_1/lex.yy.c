@@ -466,8 +466,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "./mini_1.lex"
-#line 2 "./mini_1.lex"
+#line 1 "mini_1.lex"
+#line 2 "mini_1.lex"
   int lineNum = 1;
   int linePos = 0;
 
@@ -773,7 +773,7 @@ YY_DECL
 		}
 
 	{
-#line 103 "./mini_1.lex"
+#line 103 "mini_1.lex"
 
 
 #line 780 "lex.yy.c"
@@ -835,118 +835,118 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 105 "./mini_1.lex"
+#line 105 "mini_1.lex"
 { printf("ADD\n"); linePos++; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 107 "./mini_1.lex"
+#line 107 "mini_1.lex"
 { printf("SUB\n"); linePos++; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 109 "./mini_1.lex"
+#line 109 "mini_1.lex"
 { printf("MULT\n"); linePos++;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 111 "./mini_1.lex"
+#line 111 "mini_1.lex"
 { printf("DIV\n"); linePos++; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 113 "./mini_1.lex"
+#line 113 "mini_1.lex"
 { printf("MOD\n"); linePos++; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 115 "./mini_1.lex"
+#line 115 "mini_1.lex"
 { printf("EQ\n"); linePos += 2; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 117 "./mini_1.lex"
+#line 117 "mini_1.lex"
 { printf("ASSIGN\n"); linePos += 2; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 119 "./mini_1.lex"
+#line 119 "mini_1.lex"
 { printf("NEQ\n"); linePos += 2; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 121 "./mini_1.lex"
+#line 121 "mini_1.lex"
 { printf("LT\n"); linePos += 1; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 123 "./mini_1.lex"
+#line 123 "mini_1.lex"
 { printf("GT\n"); linePos += 1; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 125 "./mini_1.lex"
+#line 125 "mini_1.lex"
 { printf("LTE\n"); linePos += 2; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 127 "./mini_1.lex"
+#line 127 "mini_1.lex"
 { printf("GTE\n"); linePos += 2; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 129 "./mini_1.lex"
+#line 129 "mini_1.lex"
 { printf("L_PAREN\n"); linePos++; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 131 "./mini_1.lex"
+#line 131 "mini_1.lex"
 { printf("R_PAREN\n"); linePos++; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 133 "./mini_1.lex"
+#line 133 "mini_1.lex"
 { printf("L_SQUARE_BRACKET\n"); linePos++; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 135 "./mini_1.lex"
+#line 135 "mini_1.lex"
 { printf("R_SQUARE_BRACKET\n"); linePos++; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 137 "./mini_1.lex"
+#line 137 "mini_1.lex"
 { printf("SEMICOLON\n"); linePos++; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 139 "./mini_1.lex"
+#line 139 "mini_1.lex"
 { printf("COLON\n"); linePos++; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 141 "./mini_1.lex"
+#line 141 "mini_1.lex"
 { printf("COMMA\n"); linePos++; }
 	YY_BREAK
 case 20:
 /* rule 20 can match eol */
 YY_RULE_SETUP
-#line 143 "./mini_1.lex"
+#line 143 "mini_1.lex"
 { linePos = 0; ++lineNum; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 145 "./mini_1.lex"
+#line 145 "mini_1.lex"
 { linePos += yyleng; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 147 "./mini_1.lex"
+#line 147 "mini_1.lex"
 {printf("NUMBER %s\n", yytext); linePos += yyleng; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 149 "./mini_1.lex"
+#line 149 "mini_1.lex"
 {
 
   char isReservedWord = 0; // defaults to false
@@ -968,7 +968,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 169 "./mini_1.lex"
+#line 169 "mini_1.lex"
 {
 
   printf("Error at line %d:%d. Cannot start identifier with a number: %s\n", lineNum, linePos, yytext); exit(-1);
@@ -976,7 +976,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 175 "./mini_1.lex"
+#line 175 "mini_1.lex"
 {
    printf("Error at line %d:%d. Cannot end with an underscode: %s\n", lineNum, linePos, yytext); exit(-1);
 }
@@ -984,17 +984,17 @@ YY_RULE_SETUP
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 179 "./mini_1.lex"
+#line 179 "mini_1.lex"
 { lineNum++; linePos = 0;  }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 182 "./mini_1.lex"
+#line 182 "mini_1.lex"
 {printf("Error at line %d:%d. Unrecognized input: %s\n", lineNum, linePos, yytext); exit(-1); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 184 "./mini_1.lex"
+#line 184 "mini_1.lex"
 ECHO;
 	YY_BREAK
 #line 1001 "lex.yy.c"
@@ -2002,7 +2002,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 184 "./mini_1.lex"
+#line 184 "mini_1.lex"
 
 
 int main(int argc, char ** argv)
