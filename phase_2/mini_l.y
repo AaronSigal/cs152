@@ -1,14 +1,30 @@
 %{
- #include <stdio.h>
- #include <stdlib.h>
- void yyerror(const char *msg);
- extern int currLine;
- extern int currPos;
- FILE * yyin;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <map>
+#include "y.tab.h"
+#include "t.tab.h"
+#include "heading.h"
+
+using namespace std;
+
+void yyerror(const char* s);
+extern int yylex(void);
+
+struct Symbol {
+  string type;
+  string generated_code;
+}
+
+map<string, Symbol> global_symbol_table;
+map<string, Symbol> symbol_table;
+
 %}
 
 %union{
-  char* ival;
+  int ival;
+  char* sval;
   double dval;
 }
 

@@ -1,7 +1,7 @@
 parser : mini_l.lex mini_l.y       # module for twiddling the frobs
+	bison -v -d --file-prefix=y mini_l.y
 	flex mini_l.lex
-	bison -v -d -Wconflicts-sr --file-prefix=y mini_l.y 
-	gcc -o parser lex.yy.c y.tab.c -lfl
+	g++ -std=c++11 -Wno-write-strings -o parser y.tab.c lex.yy.c -lfl
 
 clean :
 	rm lex.yy.c

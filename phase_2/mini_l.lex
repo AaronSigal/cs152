@@ -165,7 +165,7 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
   }
 
   if (!isReservedWord)  {
-    yylval.ival = (yytext);
+    yylval.sval = yytext;
     return IDENT; //printf("IDENT %s\n", yytext);
   }
 

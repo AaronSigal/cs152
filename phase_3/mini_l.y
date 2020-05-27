@@ -1,14 +1,31 @@
 %{
- #include <stdio.h>
- #include <stdlib.h>
- void yyerror(const char *msg);
- extern int currLine;
- extern int currPos;
- FILE * yyin;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <map>
+#include "y.tab.h"
+#include "heading.h"
+
+using namespace std;
+
+void yyerror(const char* s);
+int yylex(void);
+
+using namespace std;
+
+struct Symbol {
+  string type;
+  string generated_code;
+};
+
+map<string, Symbol> global_symbol_table;
+map<string, Symbol> symbol_table;
+
 %}
 
 %union{
-  char* ival;
+  int ival;
+  char* sval;
   double dval;
 }
 
@@ -182,23 +199,3 @@ var: IDENT
     {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");}
 
 %%
-int main(int argc, char ** argv)
-{
-   if(argc > 1) {
-
-      yyin = fopen(argv[1], "r"); // open the file
-
-      if(yyin == NULL) yyin = stdin; // If something went wrong default back to stdin
-
-   } else {
-
-      yyin = stdin; // Default to stdin
-
-   }
-
-   yyparse(); // Finally call the parser.
-}
-
-void yyerror(const char * msg) {
-  printf("Error: %s\n", msg);
-}
