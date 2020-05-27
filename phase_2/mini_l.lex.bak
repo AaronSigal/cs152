@@ -2,8 +2,6 @@
   int lineNum = 1;
   int linePos = 0;
   #include "y.tab.h"
-  #include <stdio.h>
-  #include <stddef.h>
 
   static const char* reservedWords[] = {
     "and", 
@@ -149,7 +147,7 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
 
 [\t ]+ { linePos += yyleng;}
 
-{NUMBER} {linePos += yyleng; yylval.ival = atoi(yytext); return NUMBER;}
+{NUMBER} {linePos += yyleng; return NUMBER;}
 
 {LETTER}({CHARACTER}*{CHAR_NO_SCORE})? {
 
@@ -166,7 +164,7 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
     }
   }
 
-  if (!isReservedWord)  yylval.sval = yytext; return IDENT; //printf("IDENT %s\n", yytext);
+  if (!isReservedWord)  return IDENT; //printf("IDENT %s\n", yytext);
 
   linePos += yyleng;
 }

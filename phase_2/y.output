@@ -1,7 +1,7 @@
 Terminals unused in grammar
 
-   FOREACH
-   IN
+    FOREACH
+    IN
 
 
 State 0 conflicts: 1 shift/reduce
@@ -100,102 +100,119 @@ Grammar
 
 Terminals, with rules where they appear
 
-$end (0) 0
-error (256)
-AND (258) 43
-OR (259) 41
-NOT (260) 46 49 50 52
-TRUE (261) 47 49
-FALSE (262) 48 50
-IF (263) 19 20
-THEN (264) 19 20
-ELSE (265) 20
-ENDIF (266) 19 20
-WHILE (267) 21 22
-DO (268) 22
-BEGINLOOP (269) 21 22 23
-ENDLOOP (270) 21 22 23
-FOR (271) 23
-FOREACH (272)
-IN (273)
-CONTINUE (274) 26
-FUNCTION (275) 5
-RETURN (276) 27
-BEGIN_PARAMS (277) 5
-END_PARAMS (278) 5
-BEGIN_LOCALS (279) 5
-END_LOCALS (280) 5
-BEGIN_BODY (281) 5
-END_BODY (282) 5
-INTEGER (283) 11 12 13
-ARRAY (284) 12 13
-OF (285) 12 13
-READ (286) 24
-WRITE (287) 25
-ADD (288) 59
-SUB (289) 32 33 34 35 60
-MULT (290) 37
-DIV (291) 38
-MOD (292) 39
-EQ (293) 53
-ASSIGN (294) 18 23
-NEQ (295) 54
-LT (296) 55
-GT (297) 56
-LTE (298) 57
-GTE (299) 58
-L_PAREN (300) 30 31 34 35 51 52
-R_PAREN (301) 30 31 34 35 51 52
-L_SQUARE_BRACKET (302) 12 13 67 68
-R_SQUARE_BRACKET (303) 12 13 67 68
-SEMICOLON (304) 5 6 8 14 16 23
-COLON (305) 11 12 13
-COMMA (306) 10 62 64
-NUMBER (307) 12 13 23 29 33
-IDENT (308) 5 10 11 12 13 31 35 66 67 68
+    $end (0) 0
+    error (256)
+    AND (258) 43
+    OR (259) 41
+    NOT (260) 46 49 50 52
+    TRUE (261) 47 49
+    FALSE (262) 48 50
+    IF (263) 19 20
+    THEN (264) 19 20
+    ELSE (265) 20
+    ENDIF (266) 19 20
+    WHILE (267) 21 22
+    DO (268) 22
+    BEGINLOOP (269) 21 22 23
+    ENDLOOP (270) 21 22 23
+    FOR (271) 23
+    FOREACH (272)
+    IN (273)
+    CONTINUE (274) 26
+    FUNCTION (275) 5
+    RETURN (276) 27
+    BEGIN_PARAMS (277) 5
+    END_PARAMS (278) 5
+    BEGIN_LOCALS (279) 5
+    END_LOCALS (280) 5
+    BEGIN_BODY (281) 5
+    END_BODY (282) 5
+    INTEGER (283) 11 12 13
+    ARRAY (284) 12 13
+    OF (285) 12 13
+    READ (286) 24
+    WRITE (287) 25
+    ADD (288) 59
+    SUB (289) 32 33 34 35 60
+    MULT (290) 37
+    DIV (291) 38
+    MOD (292) 39
+    EQ (293) 53
+    ASSIGN (294) 18 23
+    NEQ (295) 54
+    LT (296) 55
+    GT (297) 56
+    LTE (298) 57
+    GTE (299) 58
+    L_PAREN (300) 30 31 34 35 51 52
+    R_PAREN (301) 30 31 34 35 51 52
+    L_SQUARE_BRACKET (302) 12 13 67 68
+    R_SQUARE_BRACKET (303) 12 13 67 68
+    SEMICOLON (304) 5 6 8 14 16 23
+    COLON (305) 11 12 13
+    COMMA (306) 10 62 64
+    NUMBER <ival> (307) 12 13 23 29 33
+    IDENT <sval> (308) 5 10 11 12 13 31 35 66 67 68
 
 
 Nonterminals, with rules where they appear
 
-$accept (54)
-    on left: 0
-program (55)
-    on left: 1, on right: 0
-functions (56)
-    on left: 2 3 4, on right: 1 3
-function (57)
-    on left: 5, on right: 3 4
-declarations (58)
-    on left: 6 7 8 9, on right: 5 6 8
-declaration (59)
-    on left: 10 11 12 13, on right: 8 9 10
-statements (60)
-    on left: 14 15 16 17, on right: 5 14 16 19 20 21 22 23
-statement (61)
-    on left: 18 19 20 21 22 23 24 25 26 27, on right: 16 17
-term (62)
-    on left: 28 29 30 31 32 33 34 35, on right: 37 38 39 40
-multiplicative_expression_0 (63)
-    on left: 36, on right: 37 38 39
-multiplicative_expression (64)
-    on left: 37 38 39 40, on right: 36 59 60 61
-bool-expr (65)
-    on left: 41 42, on right: 19 20 21 22 23 41 51 52
-relation-and-expr (66)
-    on left: 43 44, on right: 41 42 43
-relation-expr (67)
-    on left: 45 46 47 48 49 50 51 52, on right: 43 44
-comp (68)
-    on left: 53 54 55 56 57 58, on right: 45 46
-expression (69)
-    on left: 59 60 61, on right: 18 23 27 30 34 45 46 59 60 62 63 67
-    68
-expression_chain (70)
-    on left: 62 63, on right: 31 35 62
-vars (71)
-    on left: 64 65, on right: 24 25 64
-var (72)
-    on left: 66 67 68, on right: 18 23 28 32 64 65
+    $accept (54)
+        on left: 0
+    program (55)
+        on left: 1
+        on right: 0
+    functions (56)
+        on left: 2 3 4
+        on right: 1 3
+    function (57)
+        on left: 5
+        on right: 3 4
+    declarations (58)
+        on left: 6 7 8 9
+        on right: 5 6 8
+    declaration (59)
+        on left: 10 11 12 13
+        on right: 8 9 10
+    statements (60)
+        on left: 14 15 16 17
+        on right: 5 14 16 19 20 21 22 23
+    statement (61)
+        on left: 18 19 20 21 22 23 24 25 26 27
+        on right: 16 17
+    term (62)
+        on left: 28 29 30 31 32 33 34 35
+        on right: 37 38 39 40
+    multiplicative_expression_0 (63)
+        on left: 36
+        on right: 37 38 39
+    multiplicative_expression (64)
+        on left: 37 38 39 40
+        on right: 36 59 60 61
+    bool-expr (65)
+        on left: 41 42
+        on right: 19 20 21 22 23 41 51 52
+    relation-and-expr (66)
+        on left: 43 44
+        on right: 41 42 43
+    relation-expr (67)
+        on left: 45 46 47 48 49 50 51 52
+        on right: 43 44
+    comp (68)
+        on left: 53 54 55 56 57 58
+        on right: 45 46
+    expression (69)
+        on left: 59 60 61
+        on right: 18 23 27 30 34 45 46 59 60 62 63 67 68
+    expression_chain (70)
+        on left: 62 63
+        on right: 31 35 62
+    vars (71)
+        on left: 64 65
+        on right: 24 25 64
+    var (72)
+        on left: 66 67 68
+        on right: 18 23 28 32 64 65
 
 
 State 0
