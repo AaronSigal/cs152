@@ -470,9 +470,9 @@ char *yytext;
 #line 2 "mini_l.lex"
   int lineNum = 1;
   int linePos = 0;
-   #include <stdio.h>
-   #include <string>
-   #include "y.tab.h"
+  #include "y.tab.h"
+  #include <stdio.h>
+  #include <stddef.h>
 
   static const char* reservedWords[] = {
     "and", 
@@ -947,7 +947,7 @@ YY_RULE_SETUP
 case 22:
 YY_RULE_SETUP
 #line 152 "mini_l.lex"
-{linePos += yyleng; yylval.dval = atof(yytext); return NUMBER;}
+{linePos += yyleng; yylval.ival = atoi(yytext); return NUMBER;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
@@ -967,17 +967,14 @@ YY_RULE_SETUP
     }
   }
 
-  if (!isReservedWord)  {
-    yylval.sval = yytext;
-    return IDENT; //printf("IDENT %s\n", yytext);
-  }
+  if (!isReservedWord)  yylval.sval = strdup(yytext); return IDENT; //printf("IDENT %s\n", yytext);
 
   linePos += yyleng;
 }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 178 "mini_l.lex"
+#line 175 "mini_l.lex"
 {
 
   printf("Error at line %d:%d. Cannot start identifier with a number: %s\n", lineNum, linePos, yytext); exit(-1);
@@ -985,7 +982,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 184 "mini_l.lex"
+#line 181 "mini_l.lex"
 {
    printf("Error at line %d:%d. Cannot end with an underscode: %s\n", lineNum, linePos, yytext); exit(-1);
 }
@@ -993,20 +990,20 @@ YY_RULE_SETUP
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 188 "mini_l.lex"
+#line 185 "mini_l.lex"
 { lineNum++; linePos = 0;  }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 191 "mini_l.lex"
+#line 188 "mini_l.lex"
 {printf("Error at line %d:%d. Unrecognized input: %s\n", lineNum, linePos, yytext); exit(-1); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 193 "mini_l.lex"
+#line 190 "mini_l.lex"
 ECHO;
 	YY_BREAK
-#line 1010 "lex.yy.c"
+#line 1007 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2011,31 +2008,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 193 "mini_l.lex"
+#line 190 "mini_l.lex"
 
-
-int yyparse();
-int yylex();
-
-int main(int argc, char ** argv)
-{
-   if(argc > 1) {
-
-      yyin = fopen(argv[1], "r"); // open the file
-
-      if(yyin == NULL) yyin = stdin; // If something went wrong default back to stdin
-
-   } else {
-
-      yyin = stdin; // Default to stdin
-
-   }
-
-   yyparse(); // Finally call the parser.
-
-   return 0;
-}
-
-void yyerror(const char * msg) {
-  printf("Error: %s\n", msg);
-}

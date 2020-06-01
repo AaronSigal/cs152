@@ -6,20 +6,43 @@
 #include "y.tab.h"
 #include "heading.h"
 
-using namespace std;
+extern FILE * yyin;
 
+using namespace std;
+// ****Forward Declarations****
 void yyerror(const char* s);
 int yylex(void);
 
-using namespace std;
-
+// ****Structures****
 struct Symbol {
   string type;
   string generated_code;
 };
 
+// **** Global Variables ****
 map<string, Symbol> global_symbol_table;
 map<string, Symbol> symbol_table;
+
+int num_labels = 0;
+int num_temps  = 0;
+int num_params = 0;
+
+const string LABEL_PRE = "__label__";
+const string TEMP_PRE  = "__temp__" ; 
+
+// ****Helper Functions****
+
+string newLabel() {
+  string result = LABEL_PRE + to_string(num_labels);
+  num_labels++;
+  return result;
+}
+
+string newTemp() {
+  string result = TEMP_PRE + to_string(num_temps);
+  num_labels++;
+  return result;
+}
 
 %}
 
@@ -32,8 +55,8 @@ map<string, Symbol> symbol_table;
 %error-verbose
 
 %token  AND OR NOT TRUE FALSE IF THEN ELSE ENDIF WHILE DO BEGINLOOP ENDLOOP FOR FOREACH IN CONTINUE FUNCTION RETURN BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY OF READ WRITE ADD SUB MULT DIV MOD EQ ASSIGN NEQ LT GT LTE GTE L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET SEMICOLON COLON COMMA 
-%token <dval> NUMBER 
-%token <ival> IDENT
+%token <ival> NUMBER 
+%token <sval> IDENT
 
 %start program
 
@@ -106,7 +129,7 @@ statement: var ASSIGN expression
 term: var
       {printf("term -> var\n");}
       | NUMBER
-      {printf("term -> NUMBER: %f\n", $1);}
+      {printf("term -> NUMBER: %d\n", $1);}
       | L_PAREN expression R_PAREN
       {printf("term -> L_PAREN expression R_PAREN\n");}
       | IDENT L_PAREN expression_chain R_PAREN
@@ -199,3 +222,23 @@ var: IDENT
     {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");}
 
 %%
+int main(int argc, char ** argv)
+{
+   if(argc > 1) {
+
+      yyin = fopen(argv[1], "r"); // open the file
+
+      if(yyin == NULL) yyin = stdin; // If something went wrong default back to stdin
+
+   } else {
+
+      yyin = stdin; // Default to stdin
+
+   }
+
+   yyparse(); // Finally call the parser.
+}
+
+void yyerror(const char * msg) {
+  printf("Error: %s\n", msg);
+}

@@ -1,9 +1,9 @@
 %{
   int lineNum = 1;
   int linePos = 0;
-   #include <stdio.h>
-   #include <string>
-   #include "y.tab.h"
+  #include "y.tab.h"
+  #include <stdio.h>
+  #include <stddef.h>
 
   static const char* reservedWords[] = {
     "and", 
@@ -149,7 +149,7 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
 
 [\t ]+ { linePos += yyleng;}
 
-{NUMBER} {linePos += yyleng; yylval.dval = atof(yytext); return NUMBER;}
+{NUMBER} {linePos += yyleng; yylval.ival = atoi(yytext); return NUMBER;}
 
 {LETTER}({CHARACTER}*{CHAR_NO_SCORE})? {
 
@@ -166,10 +166,7 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
     }
   }
 
-  if (!isReservedWord)  {
-    yylval.sval = yytext;
-    return IDENT; //printf("IDENT %s\n", yytext);
-  }
+  if (!isReservedWord)  yylval.sval = strdup(yytext); return IDENT; //printf("IDENT %s\n", yytext);
 
   linePos += yyleng;
 }
@@ -191,29 +188,3 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
 .     {printf("Error at line %d:%d. Unrecognized input: %s\n", lineNum, linePos, yytext); exit(-1); }
 
 %%
-
-int yyparse();
-int yylex();
-
-int main(int argc, char ** argv)
-{
-   if(argc > 1) {
-
-      yyin = fopen(argv[1], "r"); // open the file
-
-      if(yyin == NULL) yyin = stdin; // If something went wrong default back to stdin
-
-   } else {
-
-      yyin = stdin; // Default to stdin
-
-   }
-
-   yyparse(); // Finally call the parser.
-
-   return 0;
-}
-
-void yyerror(const char * msg) {
-  printf("Error: %s\n", msg);
-}
