@@ -4,6 +4,7 @@
   #include "y.tab.h"
   #include <stdio.h>
   #include <stddef.h>
+  #include <cstring>
 
   static const char* reservedWords[] = {
     "and", 

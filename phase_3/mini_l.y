@@ -1,48 +1,34 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <map>
-#include "y.tab.h"
-#include "heading.h"
+  #include <stdio.h>
+  #include <stddef.h>
+  #include <cstring>
+  #include <string>
+  #include <map>
+  #include <vector>
+  extern FILE * yyin;
+  void yyerror(const char * msg);
+  int yylex();
+  struct SymbolTable;
 
-extern FILE * yyin;
+  using namespace std;
 
-using namespace std;
-// ****Forward Declarations****
-void yyerror(const char* s);
-int yylex(void);
+  struct Symbol{
+    string type;
+    string value;
+    string* place;
+    string* code;
+  };
 
-// ****Structures****
-struct Symbol {
-  string type;
-  string generated_code;
-};
+  struct SymbolTable {
+    map<string, Symbol> table = map<string, Symbol>(); // The table in which we insert symbols at the current scope
+    SymbolTable* parentTable = nullptr;  // The symbol table for the next-widest scope. This is null only for the global table;
+  };
 
-// **** Global Variables ****
-map<string, Symbol> global_symbol_table;
-map<string, Symbol> symbol_table;
-
-int num_labels = 0;
-int num_temps  = 0;
-int num_params = 0;
-
-const string LABEL_PRE = "__label__";
-const string TEMP_PRE  = "__temp__" ; 
-
-// ****Helper Functions****
-
-string newLabel() {
-  string result = LABEL_PRE + to_string(num_labels);
-  num_labels++;
-  return result;
-}
-
-string newTemp() {
-  string result = TEMP_PRE + to_string(num_temps);
-  num_labels++;
-  return result;
-}
+  // Global variables;
+  SymbolTable globalTable;   // The top-level table
+  SymbolTable* currentScope = &globalTable; // The current table, may not be top-level
+  vector<string> param_id;   // List of parameters for current function
+  vector<string> param_type; // List of parameters' types for current function
 
 %}
 
@@ -50,6 +36,7 @@ string newTemp() {
   int ival;
   char* sval;
   double dval;
+
 }
 
 %error-verbose
@@ -241,4 +228,23 @@ int main(int argc, char ** argv)
 
 void yyerror(const char * msg) {
   printf("Error: %s\n", msg);
+}
+
+bool exists(string name) {
+  if (currentScope == nullptr) yyerror("Internal error: scope not set");
+
+  auto itr = currentScope->table.find(name);
+  if (itr == currentScope->table.end()) return false;
+
+  return true;
+}
+
+// Checks if a symbol already exists in a given symbol table
+bool exists(string name, SymbolTable* table) {
+   if (table == nullptr) yyerror("Internal error: cannot check null symbol table");
+
+  auto itr = table->table.find(name);
+  if (itr == table->table.end()) return false;
+
+  return true;
 }
