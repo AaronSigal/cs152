@@ -5,7 +5,10 @@
   #include <string>
   #include <map>
   #include <vector>
+  #include <sstream>
   extern FILE * yyin;
+  extern int lineNum;
+  extern int linePos;
   void yyerror(const char * msg);
   int yylex();
   struct SymbolTable;
@@ -247,4 +250,17 @@ bool exists(string name, SymbolTable* table) {
   if (itr == table->table.end()) return false;
 
   return true;
+}
+
+// Attempts to add a symbol to the current scope
+bool add(string name, Symbol symbol) {
+  stringstream ss;
+  ss << "Error on line " << to_string(lineNum) << ":" << to_string(linePos) << " : Redefinition of" << name << "\n";
+  if (exists(name), currentScope) yyerror(ss.str().c_str());
+
+  if (currentScope == nullptr) yyerror("Internal error: scope not set");
+
+  currentScope->table[name] = symbol;
+  return true;
+
 }
