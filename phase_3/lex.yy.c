@@ -474,95 +474,18 @@ char *yytext;
   #include <stdio.h>
   #include <stddef.h>
   #include <cstring>
+  #include <vector>
+  #include <string>
+  #include "heading.h"
 
-  static const char* reservedWords[] = {
-    "and", 
-    "or", 
-    "not", 
-    "true", 
-    "false", 
+  extern "C" int yylex();
 
-    "if", 
-    "then",
-    "else",
-    "endif", 
-     
-    "while", 
-    "do", 
+  using namespace std;
 
-    "beginloop", 
-    "endloop",
-
-    "for",
-    "foreach", 
-    "in", 
-    "continue",
-
-    "function", 
-    "return",
-    "beginparams", 
-    "endparams",
-
-    "beginlocals", 
-    "endlocals",
-
-    "beginbody", 
-    "endbody", 
-
-    "integer", 
-    "array", 
-    "of", 
-    
-   
-    "read", 
-    "write"};
-
-  static const char* ReservedTokens[] = {
-    "AND", 
-    "OR", 
-    "NOT", 
-    "TRUE", 
-    "FALSE",
-
-    "IF", 
-    "THEN",
-    "ELSE", 
-    "ENDIF",
-    
-    "WHILE", 
-    "DO", 
-
-    "BEGINLOOP", 
-    "ENDLOOP",
-
-    "FOR",
-    "FOREACH", 
-    "IN", 
-    "CONTINUE",
-
-    "FUNCTION",
-    "RETURN",
-    "BEGIN_PARAMS", 
-    "END_PARAMS", 
-
-    "BEGIN_LOCALS",
-    "END_LOCALS",
-
-    "BEGIN_BODY", 
-    "END_BODY", 
-
-    "INTEGER", 
-    "ARRAY", 
-    "OF", 
-
-   
-    "READ", 
-    "WRITE"};
-  
   const int reservedWordNum = 30;
-#line 564 "lex.yy.c"
+#line 487 "lex.yy.c"
 /* Regex */
-#line 566 "lex.yy.c"
+#line 489 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -779,10 +702,10 @@ YY_DECL
 		}
 
 	{
-#line 109 "mini_l.lex"
+#line 32 "mini_l.lex"
 
 
-#line 786 "lex.yy.c"
+#line 709 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -841,118 +764,118 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 111 "mini_l.lex"
+#line 34 "mini_l.lex"
 {linePos++; return ADD;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 113 "mini_l.lex"
+#line 36 "mini_l.lex"
 { linePos++; return SUB;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 115 "mini_l.lex"
+#line 38 "mini_l.lex"
 { linePos++; return MULT;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 117 "mini_l.lex"
+#line 40 "mini_l.lex"
 { linePos++; return DIV;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 119 "mini_l.lex"
+#line 42 "mini_l.lex"
 { linePos++; return MOD;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 121 "mini_l.lex"
+#line 44 "mini_l.lex"
 { linePos += 2; return EQ;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 123 "mini_l.lex"
+#line 46 "mini_l.lex"
 { linePos += 2; return ASSIGN;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 125 "mini_l.lex"
+#line 48 "mini_l.lex"
 { linePos += 2; return NEQ;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 127 "mini_l.lex"
+#line 50 "mini_l.lex"
 { linePos += 1; return LT;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 129 "mini_l.lex"
+#line 52 "mini_l.lex"
 { linePos += 1; return GT;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 131 "mini_l.lex"
+#line 54 "mini_l.lex"
 { linePos += 2; return LTE;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 133 "mini_l.lex"
+#line 56 "mini_l.lex"
 { linePos += 2; return GTE;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 135 "mini_l.lex"
+#line 58 "mini_l.lex"
 { linePos++; return L_PAREN;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 137 "mini_l.lex"
+#line 60 "mini_l.lex"
 { linePos++; return R_PAREN;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 139 "mini_l.lex"
+#line 62 "mini_l.lex"
 { linePos++; return L_SQUARE_BRACKET;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 141 "mini_l.lex"
+#line 64 "mini_l.lex"
 { linePos++; return R_SQUARE_BRACKET;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 143 "mini_l.lex"
+#line 66 "mini_l.lex"
 { linePos++; return SEMICOLON;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 145 "mini_l.lex"
+#line 68 "mini_l.lex"
 { linePos++; return COLON; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 147 "mini_l.lex"
+#line 70 "mini_l.lex"
 { linePos++; return COMMA; }
 	YY_BREAK
 case 20:
 /* rule 20 can match eol */
 YY_RULE_SETUP
-#line 149 "mini_l.lex"
+#line 72 "mini_l.lex"
 { linePos = 0; ++lineNum;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 151 "mini_l.lex"
+#line 74 "mini_l.lex"
 { linePos += yyleng;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 153 "mini_l.lex"
+#line 76 "mini_l.lex"
 {linePos += yyleng; yylval.ival = atoi(yytext); return NUMBER;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 155 "mini_l.lex"
+#line 78 "mini_l.lex"
 {
 
   char isReservedWord = 0; // defaults to false
@@ -961,7 +884,7 @@ YY_RULE_SETUP
 
   for (i = 0; i < reservedWordNum; i++) {
 
-    if (!strcmp(yytext, reservedWords[i])) { // if output is zero, words are same
+    if (yytext == reservedWords[i]) { // if output is zero, words are same
       isReservedWord = 1; // Reserverd word is set to true
       //printf("%s\n", ReservedTokens[i]); // print the token string for the reserved word
       return i + 258;
@@ -975,7 +898,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 176 "mini_l.lex"
+#line 99 "mini_l.lex"
 {
 
   printf("Error at line %d:%d. Cannot start identifier with a number: %s\n", lineNum, linePos, yytext); exit(-1);
@@ -983,7 +906,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 182 "mini_l.lex"
+#line 105 "mini_l.lex"
 {
    printf("Error at line %d:%d. Cannot end with an underscode: %s\n", lineNum, linePos, yytext); exit(-1);
 }
@@ -991,20 +914,20 @@ YY_RULE_SETUP
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 186 "mini_l.lex"
+#line 109 "mini_l.lex"
 { lineNum++; linePos = 0;  }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 189 "mini_l.lex"
+#line 112 "mini_l.lex"
 {printf("Error at line %d:%d. Unrecognized input: %s\n", lineNum, linePos, yytext); exit(-1); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 191 "mini_l.lex"
+#line 114 "mini_l.lex"
 ECHO;
 	YY_BREAK
-#line 1008 "lex.yy.c"
+#line 931 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2009,5 +1932,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 191 "mini_l.lex"
+#line 114 "mini_l.lex"
 

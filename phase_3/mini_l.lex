@@ -5,91 +5,14 @@
   #include <stdio.h>
   #include <stddef.h>
   #include <cstring>
+  #include <vector>
+  #include <string>
+  #include "heading.h"
 
-  static const char* reservedWords[] = {
-    "and", 
-    "or", 
-    "not", 
-    "true", 
-    "false", 
+  extern "C" int yylex();
 
-    "if", 
-    "then",
-    "else",
-    "endif", 
-     
-    "while", 
-    "do", 
+  using namespace std;
 
-    "beginloop", 
-    "endloop",
-
-    "for",
-    "foreach", 
-    "in", 
-    "continue",
-
-    "function", 
-    "return",
-    "beginparams", 
-    "endparams",
-
-    "beginlocals", 
-    "endlocals",
-
-    "beginbody", 
-    "endbody", 
-
-    "integer", 
-    "array", 
-    "of", 
-    
-   
-    "read", 
-    "write"};
-
-  static const char* ReservedTokens[] = {
-    "AND", 
-    "OR", 
-    "NOT", 
-    "TRUE", 
-    "FALSE",
-
-    "IF", 
-    "THEN",
-    "ELSE", 
-    "ENDIF",
-    
-    "WHILE", 
-    "DO", 
-
-    "BEGINLOOP", 
-    "ENDLOOP",
-
-    "FOR",
-    "FOREACH", 
-    "IN", 
-    "CONTINUE",
-
-    "FUNCTION",
-    "RETURN",
-    "BEGIN_PARAMS", 
-    "END_PARAMS", 
-
-    "BEGIN_LOCALS",
-    "END_LOCALS",
-
-    "BEGIN_BODY", 
-    "END_BODY", 
-
-    "INTEGER", 
-    "ARRAY", 
-    "OF", 
-
-   
-    "READ", 
-    "WRITE"};
-  
   const int reservedWordNum = 30;
 %}
 
@@ -160,7 +83,7 @@ NUMBER ({DIGIT}+)|({DIGIT}?\.?{DIGIT}+([eE][+-]{DIGIT}+)?)
 
   for (i = 0; i < reservedWordNum; i++) {
 
-    if (!strcmp(yytext, reservedWords[i])) { // if output is zero, words are same
+    if (yytext == reservedWords[i]) { // if output is zero, words are same
       isReservedWord = 1; // Reserverd word is set to true
       //printf("%s\n", ReservedTokens[i]); // print the token string for the reserved word
       return i + 258;

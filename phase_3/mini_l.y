@@ -4,34 +4,53 @@
   #include <cstring>
   #include <string>
   #include <map>
+  #include <set>
   #include <vector>
   #include <sstream>
+  #include "heading.h"
+
+  // Externs
   extern FILE * yyin;
   extern int lineNum;
   extern int linePos;
+  extern "C" int yylex();
+
+  //Function forward declarations
   void yyerror(const char * msg);
   int yylex();
   struct SymbolTable;
 
   using namespace std;
 
-  struct Symbol{
-    string type;
-    string value;
-    string* place;
-    string* code;
-  };
+struct Symbol{
+  string type;
+  string value;
+  string code;
+};
 
-  struct SymbolTable {
-    map<string, Symbol> table = map<string, Symbol>(); // The table in which we insert symbols at the current scope
-    SymbolTable* parentTable = nullptr;  // The symbol table for the next-widest scope. This is null only for the global table;
-  };
+struct SymbolTable {
+  map<string, Symbol> table = map<string, Symbol>(); // The table in which we insert symbols at the current scope
+  SymbolTable* parentTable = nullptr;  // The symbol table for the next-widest scope. This is null only for the global table;
+};
+
+bool exists(string name); // Checks if a symbol already exists in the current scope's symboltable
+bool exists(string name, SymbolTable* table); // Checks if a symbol already exists in a given symbol table
+bool increaseScope();            // Move up in scope by one layer if possible.
+bool add(string name, Symbol symbol);  // Attempts to add a symbol to the current scope
+string new_label();
+string new_temp();
+
+
 
   // Global variables;
   SymbolTable globalTable;   // The top-level table
   SymbolTable* currentScope = &globalTable; // The current table, may not be top-level
   vector<string> param_id;   // List of parameters for current function
   vector<string> param_type; // List of parameters' types for current function
+  set<string> functions;
+  set<string> function_calls;
+  int label_count = 0;
+  int temp_count = 0;
 
 %}
 
@@ -40,20 +59,64 @@
   char* sval;
   double dval;
 
+struct VarContainer{
+  char* place;
+  char* code;
+  char* type;  // can be VARIABLE or ARRAY
+  char* index; // index for if this is an array
+  char* index2;
+} v;
+
+struct StatementContainer{
+  char* code;
+  char* place;
+  char* label;
+  char* type;
+  char* array_name;
+  } s;
+
+struct ExpressionContainer {
+  char* code;
+  char* place;
+  char* array_name;
+  char* type; // VARIABLE, ARRAY, or 2DARRAY
+} e;
+  
+struct Generic{
+   char* place; // Destination of value
+   char* code;  // Code used to get value
+} generic;
+
 }
 
 %error-verbose
 
-%token  AND OR NOT TRUE FALSE IF THEN ELSE ENDIF WHILE DO BEGINLOOP ENDLOOP FOR FOREACH IN CONTINUE FUNCTION RETURN BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY OF READ WRITE ADD SUB MULT DIV MOD EQ ASSIGN NEQ LT GT LTE GTE L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET SEMICOLON COLON COMMA 
-%token <ival> NUMBER 
-%token <sval> IDENT
+%token  AND OR NOT TRUE FALSE IF THEN ELSE ENDIF WHILE DO BEGINLOOP ENDLOOP FOR FOREACH IN CONTINUE FUNCTION RETURN BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY
+%token <ival> INTEGER
+%token  ARRAY OF READ WRITE ADD SUB MULT DIV MOD EQ ASSIGN NEQ LT GT LTE GTE L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET SEMICOLON COLON COMMA 
+%token <sval> IDENT 
+%token <ival> NUMBER
+
+%type <generic> program functions function
+%type <e> var term expression relation_expr relation-and-expr declaration expression_chain
 
 %start program
 
 %%
 
 program: functions
-          {printf("program -> functions\n");}
+          {printf("program -> functions\n");
+
+            for (string call : function_calls) {
+              if (functions.count(call) < 1) {
+                ostringstream oss;
+                oss << "Error at line " << /*lineNum << ":" << linePos <<*/ ": No definition for function " << call << endl;
+                 yyerror(oss.str().c_str());
+                 exit(-1);
+              }
+            }
+
+          }
           ;
 
 functions: /*epsilon*/
@@ -62,8 +125,28 @@ functions: /*epsilon*/
             {printf("functions -> function functions\n");}
           | function
 
-function: FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY
-          {printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY\n");}
+params: BEGIN_PARAMS declarations END_PARAMS
+        {}
+
+locals: BEGIN_LOCALS declarations END_LOCALS
+        {}
+
+body:   BEGIN_BODY statements END_BODY
+        {}
+
+function: FUNCTION IDENT SEMICOLON params locals body
+          {printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY\n");
+            currentScope->table.clear(); // Clear the scope since we're switching between functions
+            if (functions.count(string($2)) != 0) {
+              ostringstream oss;
+              oss << "Error on line " << lineNum << ":" << linePos << ": Redefinition of function " << $2 << endl;
+
+              yyerror(oss.str().c_str());
+              exit(-1);
+            } else {
+              functions.insert(string($2));
+            }
+          }
           ;
 
 declarations: declarations SEMICOLON
@@ -79,11 +162,56 @@ declarations: declarations SEMICOLON
 declaration: IDENT COMMA declaration
               {printf("decleration -> IDENT COMMA declaration\n");}
              | IDENT COLON INTEGER
-              {printf("declaration -> IDENT COLON NUMBER\n");}
+              {printf("declaration -> IDENT COLON NUMBER\n");
+                string s($1);
+                Symbol sym = Symbol();
+                sym.type = "VARIABLE";
+                sym.value = "null";
+                sym.code  = "";
+
+                ostringstream oss;
+                oss << ". " << s << endl;
+                sym.code = oss.str();
+
+                $$.code = strdup(oss.str().c_str());
+
+                add($1, sym);
+              }
              | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER
-              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");}
+              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
+                string s($1);
+                Symbol sym = Symbol();
+                sym.type = "ARRAY";
+                sym.value = "null";
+                sym.code  = "";
+
+                
+
+                ostringstream oss;
+                if ($5 < 0) {
+                  ostringstream oss;
+                  oss << "Index out of bounds: " << $1 << "on line " << lineNum << ":" << linePos << endl;
+                  yyerror(oss.str().c_str());
+                }
+
+                oss << ".[] " << $1 << ", " << $5 << endl;
+
+                sym.code = oss.str();
+
+                $$.code = strdup(oss.str().c_str());
+
+                add($1, sym);
+              }
              | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER
-              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");}
+              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
+                string s($1);
+                Symbol sym = Symbol();
+                sym.type = "2DARRAY";
+                sym.value = "null";
+                sym.code  = "";
+
+                add($1, sym);
+              }
               ;
 
 statements: statements SEMICOLON 
@@ -117,13 +245,34 @@ statement: var ASSIGN expression
            {printf("statement -> RETURN expression\n");}
 
 term: var
-      {printf("term -> var\n");}
+      {printf("term -> var\n");
+        $$.place = $1.place;
+      }
       | NUMBER
-      {printf("term -> NUMBER: %d\n", $1);}
-      | L_PAREN expression R_PAREN
-      {printf("term -> L_PAREN expression R_PAREN\n");}
+      {printf("term -> NUMBER: %d\n", $1);
+        $$.code = "";
+        $$.place = strdup(to_string($1).c_str());
+      }
+      
       | IDENT L_PAREN expression_chain R_PAREN
-      {printf("term -> IDENT L_PAREN expression_chain R_PAREN\n");}
+      {printf("term -> IDENT L_PAREN expression_chain R_PAREN\n");
+        // Process the function call
+        ostringstream oss;
+        if (function_calls.count($1) < 1) {
+          function_calls.insert($1);
+        }
+
+        $$.code = $3.code;
+        $$.place = $3.place;
+
+        string temp = new_temp();
+        oss << "param " << $3.place << endl;
+        oss << ". " << temp << endl;
+        oss << "call " << $1 << ", " << temp << endl;
+
+        $$.code = strdup(oss.str().c_str());
+        $$.place = strdup(temp.c_str());
+      }
       | SUB var
       {printf("term -> SUB var\n");}
       | SUB NUMBER
@@ -197,7 +346,9 @@ expression: multiplicative_expression ADD expression
 expression_chain: expression_chain COMMA expression
                   {printf("expression_chain -> expression_chain COMMA expression\n");}
                   | expression
-                  {printf("expression_chain -> expression\n");}
+                  {printf("expression_chain -> expression\n");
+
+                  }
 
 vars: vars COMMA var
       {printf("vars -> vars COMMA var\n");}
@@ -205,11 +356,22 @@ vars: vars COMMA var
       {printf("vars -> var\n");}
 
 var: IDENT
-    {printf("var -> IDENT  %s \n", $1);}
+    {printf("var -> IDENT  %s \n", $1);
+      $$.code = "";
+      $$.place = $1;
+
+    }
     | IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET
-    {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");}
+    {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
+      $$.place = $3.place;
+      $$.array_name = $1;
+      $$.type  = "ARRAY";
+      $$.code  = $3.code;
+    }
     | IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET
-    {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");}
+    {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
+     // Not implemented yet (2D array)
+    }
 
 %%
 int main(int argc, char ** argv)
@@ -234,12 +396,13 @@ void yyerror(const char * msg) {
 }
 
 bool exists(string name) {
-  if (currentScope == nullptr) yyerror("Internal error: scope not set");
-
   auto itr = currentScope->table.find(name);
-  if (itr == currentScope->table.end()) return false;
 
-  return true;
+  if (itr == currentScope->table.end()) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 // Checks if a symbol already exists in a given symbol table
@@ -247,20 +410,46 @@ bool exists(string name, SymbolTable* table) {
    if (table == nullptr) yyerror("Internal error: cannot check null symbol table");
 
   auto itr = table->table.find(name);
-  if (itr == table->table.end()) return false;
-
-  return true;
+  if (itr == table->table.end()) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 // Attempts to add a symbol to the current scope
 bool add(string name, Symbol symbol) {
   stringstream ss;
-  ss << "Error on line " << to_string(lineNum) << ":" << to_string(linePos) << " : Redefinition of" << name << "\n";
-  if (exists(name), currentScope) yyerror(ss.str().c_str());
-
+ 
+  if (exists(name)) {
+    ss << "Error on line " << to_string(lineNum) << ":" << to_string(linePos) << " : Redefinition of " << name << "\n";
+    yyerror(ss.str().c_str());
+  }
   if (currentScope == nullptr) yyerror("Internal error: scope not set");
 
-  currentScope->table[name] = symbol;
-  return true;
+  currentScope->table.insert(make_pair(name, symbol));
+  cout << "Symbol Table size is now: " << currentScope->table.size() << endl; //DEBUG
 
+  // DEBUG
+  for(auto it = currentScope->table.begin(); it != currentScope->table.end(); ++it)
+  {
+    std::cout << it->first << " " << it->second.value << " " << it->second.type << "\n";
+  }
+
+
+  return true;
+}
+
+string new_label(){
+  string temp = "__label__";
+  temp += to_string(label_count);
+  label_count += 1;
+  return temp;
+}
+
+string new_temp(){
+  string temp = "__temp__";
+  temp += to_string(temp_count);
+  temp_count += 1;
+  return temp;
 }

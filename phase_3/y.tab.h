@@ -94,8 +94,8 @@ extern int yydebug;
     SEMICOLON = 304,
     COLON = 305,
     COMMA = 306,
-    NUMBER = 307,
-    IDENT = 308
+    IDENT = 307,
+    NUMBER = 308
   };
 #endif
 
@@ -104,14 +104,42 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 38 "mini_l.y" /* yacc.c:1909  */
+#line 57 "mini_l.y" /* yacc.c:1909  */
 
   int ival;
   char* sval;
   double dval;
 
+struct VarContainer{
+  char* place;
+  char* code;
+  char* type;  // can be VARIABLE or ARRAY
+  char* index; // index for if this is an array
+  char* index2;
+} v;
 
-#line 115 "y.tab.h" /* yacc.c:1909  */
+struct StatementContainer{
+  char* code;
+  char* place;
+  char* label;
+  char* type;
+  char* array_name;
+  } s;
+
+struct ExpressionContainer {
+  char* code;
+  char* place;
+  char* array_name;
+  char* type; // VARIABLE, ARRAY, or 2DARRAY
+} e;
+  
+struct Generic{
+   char* place; // Destination of value
+   char* code;  // Code used to get value
+} generic;
+
+
+#line 143 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
