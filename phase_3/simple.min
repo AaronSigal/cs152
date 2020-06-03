@@ -4,6 +4,8 @@ beginparams
 	n : integer;
 endparams
 beginlocals
+
+
 endlocals
 beginbody
 	if (k <= 1) then return 1; endif;

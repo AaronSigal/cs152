@@ -16,7 +16,7 @@
   extern "C" int yylex();
 
   //Function forward declarations
-  void yyerror(const char * msg);
+  void yyerror (const char * msg);
   int yylex();
   struct SymbolTable;
 
@@ -97,72 +97,120 @@ struct Generic{
 %token <sval> IDENT 
 %token <ival> NUMBER
 
-%type <generic> program functions function
-%type <e> var term expression relation_expr relation-and-expr declaration expression_chain
+%type <generic> program functions function  params locals body
+%type <e> var term expression relation_expr relation-and-expr declaration expression_chain declarations vars
+%type <s> statement statements
 
 %start program
 
 %%
 
 program: functions
-          {printf("program -> functions\n");
+          {//printf("program -> functions\n");
 
+            // Check for any undefined function calls
             for (string call : function_calls) {
               if (functions.count(call) < 1) {
                 ostringstream oss;
                 oss << "Error at line " << /*lineNum << ":" << linePos <<*/ ": No definition for function " << call << endl;
-                 yyerror(oss.str().c_str());
+                 cout << (oss.str().c_str());
                  exit(-1);
               }
             }
 
+            cout << $1.code;
           }
           ;
 
 functions: /*epsilon*/
-            {printf("functions -> epsilon\n");}
+            {//printf("functions -> epsilon\n");
+              $$.code = "";
+            }
           | functions function 
-            {printf("functions -> function functions\n");}
-          | function
+            {//printf("functions -> function functions\n");
+              ostringstream oss;
+              oss << $1.code << endl << $2.code;
+              $$.code = strdup(oss.str().c_str());
+            }
+          | function 
+          {
+            $$.code = $1.code;
+          }
+
 
 params: BEGIN_PARAMS declarations END_PARAMS
-        {}
+        {$$.code = $2.code;}
 
 locals: BEGIN_LOCALS declarations END_LOCALS
-        {}
+        {$$.code = $2.code;}
 
 body:   BEGIN_BODY statements END_BODY
-        {}
+        {$$.code = $2.code;}
 
 function: FUNCTION IDENT SEMICOLON params locals body
-          {printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY\n");
+          {//printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY\n");
             currentScope->table.clear(); // Clear the scope since we're switching between functions
-            if (functions.count(string($2)) != 0) {
-              ostringstream oss;
+
+            ostringstream oss;
+
+            if (functions.count(string($2)) != 0) { // Check for duplicate declarations
               oss << "Error on line " << lineNum << ":" << linePos << ": Redefinition of function " << $2 << endl;
 
-              yyerror(oss.str().c_str());
+              cout << (oss.str().c_str());
               exit(-1);
             } else {
               functions.insert(string($2));
             }
+
+            // Check for misplaced continues
+            if (string($6.code).find("continue") != string::npos) {
+              oss << "Error on line " << lineNum << ":" << linePos << ": Misplaced Continue in body of " << $2 << endl;
+              cout << (oss.str().c_str());
+              exit(-1);
+            }
+
+            // Build function code
+            string temp = $2;
+
+            oss << "func " << temp << endl;
+            oss << $4.code << $5.code << $6.code;
+
+            $$.code = strdup(oss.str().c_str());
           }
           ;
 
 declarations: declarations SEMICOLON
-              {printf("declarations -> declarations SEMICOLON\n");}
+              {//printf("declarations -> declarations SEMICOLON\n");
+                $$.place = $1.place;
+                $$.code = $1.code;
+              }
              | /*epsilon*/
-              {printf("declarations -> epsilon\n");}
+              {//printf("declarations -> epsilon\n");
+                $$.code = "";
+              }
             | declarations SEMICOLON declaration
-            {printf("declarations SEMICOLON declaration\n");}
+            {//printf("declarations SEMICOLON declaration\n");
+              ostringstream oss;
+              oss << $1.code;
+              oss << $3.code;
+              $$.code =  strdup(oss.str().c_str());
+
+              ostringstream lss;
+              lss << $1.place << "#" << $3.place;
+              $$.place = strdup(lss.str().c_str());
+            }
             | declaration
-            {printf("declaration\n");} 
+            {//printf("declaration\n");
+              $$.code  = $1.code;
+              $$.place = $1.place;
+            } 
 
 
 declaration: IDENT COMMA declaration
-              {printf("decleration -> IDENT COMMA declaration\n");}
+              {//printf("decleration -> IDENT COMMA declaration\n");
+            }
              | IDENT COLON INTEGER
-              {printf("declaration -> IDENT COLON NUMBER\n");
+              {//printf("declaration -> IDENT COLON NUMBER\n");
                 string s($1);
                 Symbol sym = Symbol();
                 sym.type = "VARIABLE";
@@ -178,20 +226,18 @@ declaration: IDENT COMMA declaration
                 add($1, sym);
               }
              | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER
-              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
+              {//printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
                 string s($1);
                 Symbol sym = Symbol();
                 sym.type = "ARRAY";
                 sym.value = "null";
                 sym.code  = "";
 
-                
-
                 ostringstream oss;
                 if ($5 < 0) {
                   ostringstream oss;
                   oss << "Index out of bounds: " << $1 << "on line " << lineNum << ":" << linePos << endl;
-                  yyerror(oss.str().c_str());
+                  cout << (oss.str().c_str());
                 }
 
                 oss << ".[] " << $1 << ", " << $5 << endl;
@@ -203,7 +249,7 @@ declaration: IDENT COMMA declaration
                 add($1, sym);
               }
              | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER
-              {printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
+              {//printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
                 string s($1);
                 Symbol sym = Symbol();
                 sym.type = "2DARRAY";
@@ -215,47 +261,61 @@ declaration: IDENT COMMA declaration
               ;
 
 statements: statements SEMICOLON 
-            { printf("statements -> statement SEMICOLON statements\n");}
+            { //printf("statements -> statement SEMICOLON statements\n");
+          }
             | /*epsilon*/
-            {printf("statements -> epsilon\n"); }
+            {//printf("statements -> epsilon\n"); 
+          }
             | statements SEMICOLON statement
-            {printf("statements -> statements SEMICOLON statement\n");}
+            {//printf("statements -> statements SEMICOLON statement\n");
+          }
             | statement
-            {printf("statements -> statement\n");}
+            {//printf("statements -> statement\n");
+          }
 
 statement: var ASSIGN expression
-           {printf("statement -> var ASSIGN expression\n");}
+           {//printf("statement -> var ASSIGN expression\n");
+         }
            | IF bool-expr THEN statements ENDIF
-           {printf("statement -> IF bool-expr THEN statements ENDIF\n");}
+           {//printf("statement -> IF bool-expr THEN statements ENDIF\n");
+         }
            | IF bool-expr THEN statements ELSE statements ENDIF
-           {printf("statement -> IF bool-expr THEN statements ELSE statements ENDIF \n");}
+           {//printf("statement -> IF bool-expr THEN statements ELSE statements ENDIF \n");
+         }
            | WHILE bool-expr BEGINLOOP statements ENDLOOP
-           {printf("statement -> WHILE bool-expr BEGINLOOP statements ENDLOOP \n");}
+           {//printf("statement -> WHILE bool-expr BEGINLOOP statements ENDLOOP \n");
+         }
            | DO BEGINLOOP statements ENDLOOP WHILE bool-expr
-           {printf("statement -> DO BEGINLOOP statements ENDLOOP WHILE bool-expr\n");}
+           {//printf("statement -> DO BEGINLOOP statements ENDLOOP WHILE bool-expr\n");
+         }
            | FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP
-           {printf("statement -> FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP\n");}
+           {//printf("statement -> FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP\n");
+         }
            | READ vars
-           {printf("statement -> READ vars\n");}
+           {//printf("statement -> READ vars\n");
+         }
            | WRITE vars
-           {printf("statement -> WRITE vars \n");}
+           {//printf("statement -> WRITE vars \n");
+         }
            | CONTINUE
-           {printf("statement -> CONTINUE\n");}
+           {//printf("statement -> CONTINUE\n");
+         }
            | RETURN expression
-           {printf("statement -> RETURN expression\n");}
+           {//printf("statement -> RETURN expression\n");
+         }
 
 term: var
-      {printf("term -> var\n");
+      {//printf("term -> var\n");
         $$.place = $1.place;
       }
       | NUMBER
-      {printf("term -> NUMBER: %d\n", $1);
+      {//printf("term -> NUMBER: %d\n", $1);
         $$.code = "";
         $$.place = strdup(to_string($1).c_str());
       }
       
       | IDENT L_PAREN expression_chain R_PAREN
-      {printf("term -> IDENT L_PAREN expression_chain R_PAREN\n");
+      {//printf("term -> IDENT L_PAREN expression_chain R_PAREN\n");
         // Process the function call
         ostringstream oss;
         if (function_calls.count($1) < 1) {
@@ -274,102 +334,154 @@ term: var
         $$.place = strdup(temp.c_str());
       }
       | SUB var
-      {printf("term -> SUB var\n");}
+      {//printf("term -> SUB var\n");
+    }
       | SUB NUMBER
-      {printf("term -> SUB NUMBER\n");}
+      {//printf("term -> SUB NUMBER\n");
+    }
       | SUB L_PAREN expression R_PAREN
-      {printf("term -> SUB L_PAREN expression R_PAREN\n");}
+      {//printf("term -> SUB L_PAREN expression R_PAREN\n");
+    }
       | SUB IDENT L_PAREN expression_chain R_PAREN
-      {printf("term -> SUB IDENT L_PAREN expression_chain R_PAREN\n");}
+      {//printf("term -> SUB IDENT L_PAREN expression_chain R_PAREN\n");
+    }
 
 multiplicative_expression_0: multiplicative_expression
-                            {printf("multiplicative_expression_0 -> multiplicative_expression\n");}
+                            {//printf("multiplicative_expression_0 -> multiplicative_expression\n");
+                          }
 
 
 multiplicative_expression: term MULT multiplicative_expression_0
-                           {printf("multiplicative_expression -> term MULT multiplicative_expression\n");}
+                           {//printf("multiplicative_expression -> term MULT multiplicative_expression\n");
+                         }
                            | term DIV multiplicative_expression_0
-                           {printf("multiplicative_expression -> term DIV multiplicative_expression\n");}
+                           {//printf("multiplicative_expression -> term DIV multiplicative_expression\n");
+                         }
                            | term MOD multiplicative_expression_0
-                           {printf("multiplicative_expression -> term MOD multiplicative_expression\n");}
+                           {//printf("multiplicative_expression -> term MOD multiplicative_expression\n");
+                         }
                            | term
-                           {printf("multiplicative_expression -> term\n");}
+                           {//printf("multiplicative_expression -> term\n");
+                         }
 
 bool-expr: relation-and-expr OR bool-expr
-            {printf("bool-expr -> relation-and-expr OR bool-expr\n");}
+            {//printf("bool-expr -> relation-and-expr OR bool-expr\n");
+          }
             | relation-and-expr
-            {printf("bool-expr -> relation-and-expr\n");}
+            {//printf("bool-expr -> relation-and-expr\n");
+          }
 
 relation-and-expr: relation-expr AND relation-and-expr
-                    {printf("relation-and-expr -> relation-expr_0 AND relation-and-expr\n");}
+                    {//printf("relation-and-expr -> relation-expr_0 AND relation-and-expr\n");
+                  }
                     | relation-expr
-                    {printf("relation-and-expr -> relation-expr_0\n");}
+                    {//printf("relation-and-expr -> relation-expr_0\n");
+                  }
 
 
 relation-expr: expression comp expression
-                {printf("relation_expr -> expression comp expression\n");}
+                {//printf("relation_expr -> expression comp expression\n");
+              }
                 | NOT expression comp expression
-                {printf("relation_expr -> NOT expression comp expression\n");}
+                {//printf("relation_expr -> NOT expression comp expression\n");
+              }
                 | TRUE
-                {printf("relation_expr -> TRUE\n" );}
+                {//printf("relation_expr -> TRUE\n" );
+              }
                 | FALSE
-                {printf("relation_expr -> FALSE\n");}
+                {//printf("relation_expr -> FALSE\n");
+              }
                 | NOT TRUE
-                {printf("relation_expr -> NOT TRUE\n" );}
+                {//printf("relation_expr -> NOT TRUE\n" );
+              }
                 | NOT FALSE
-                {printf("relation_expr -> NOT FALSE\n");}
+                {//printf("relation_expr -> NOT FALSE\n");
+              }
                 | L_PAREN bool-expr R_PAREN
-                {printf("relation_expr -> L_PAREN bool-expr R_PAREN\n");}
+                {//printf("relation_expr -> L_PAREN bool-expr R_PAREN\n");
+              }
                 | NOT L_PAREN bool-expr R_PAREN
-                {printf("relation_expr -> NOT L_PAREN bool-expr R_PAREN\n");}
+                {//printf("relation_expr -> NOT L_PAREN bool-expr R_PAREN\n");
+              }
 
 comp: EQ
-      {printf("comp -> EQ\n");}
+      {//printf("comp -> EQ\n");
+    }
       | NEQ
-      {printf("comp -> NEQ\n");}
+      {//printf("comp -> NEQ\n");
+    }
       | LT
-      {printf("comp -> LT\n");}
+      {//printf("comp -> LT\n");
+    }
       | GT
-      {printf("comp -> GT\n");}
+      {//printf("comp -> GT\n");
+    }
       | LTE
-      {printf("comp -> LTE\n");}
+      {//printf("comp -> LTE\n");
+    }
       | GTE
-      {printf("comp -> GTE\n");}
+      {//printf("comp -> GTE\n");
+    }
 
 expression: multiplicative_expression ADD expression
-            {printf("expression -> multiplicative_expression PLUS expression\n");}
+            {//printf("expression -> multiplicative_expression PLUS expression\n");
+          }
             | multiplicative_expression SUB expression
-            {printf("expression -> multiplicative_expression SUB expression\n");}
+            {//printf("expression -> multiplicative_expression SUB expression\n");
+          }
             | multiplicative_expression
-            {printf("expression -> multiplicative_expression\n");}
+            {//printf("expression -> multiplicative_expression\n");
+          }
 
 expression_chain: expression_chain COMMA expression
-                  {printf("expression_chain -> expression_chain COMMA expression\n");}
+                  {//printf("expression_chain -> expression_chain COMMA expression\n");
+                }
                   | expression
-                  {printf("expression_chain -> expression\n");
+                  {//printf("expression_chain -> expression\n");
 
                   }
 
 vars: vars COMMA var
-      {printf("vars -> vars COMMA var\n");}
+      {//printf("vars -> vars COMMA var\n");
+        ostringstream oss;
+        oss << $1.place << "#" << $3.place;
+        $$.place = strdup(oss.str().c_str());
+      }
       | var
-      {printf("vars -> var\n");}
+      {//printf("vars -> var\n");
+        if($1.type == "ARRAY") {
+          $$.code = $1.code;
+          $$.place = $1.place;
+          $$.type == $1.type;
+        }
+
+        if ($1.type == "ARRAY2D") {
+          $$.code = $1.code;
+          $$.place = $1.place;
+          $$.type == $1.type;
+        }
+
+        if ($1.type == "VARIABLE") {
+          $$.code = $1.code;
+          $$.place = $1.place;
+        }
+      }
 
 var: IDENT
-    {printf("var -> IDENT  %s \n", $1);
+    {//printf("var -> IDENT  %s \n", $1);
       $$.code = "";
       $$.place = $1;
 
     }
     | IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET
-    {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
+    {//printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
       $$.place = $3.place;
       $$.array_name = $1;
       $$.type  = "ARRAY";
       $$.code  = $3.code;
     }
     | IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET
-    {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
+    {//printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
      // Not implemented yet (2D array)
     }
 
@@ -391,7 +503,7 @@ int main(int argc, char ** argv)
    yyparse(); // Finally call the parser.
 }
 
-void yyerror(const char * msg) {
+void yyerror (const char * msg) {
   printf("Error: %s\n", msg);
 }
 
@@ -407,7 +519,7 @@ bool exists(string name) {
 
 // Checks if a symbol already exists in a given symbol table
 bool exists(string name, SymbolTable* table) {
-   if (table == nullptr) yyerror("Internal error: cannot check null symbol table");
+   if (table == nullptr) cout << ("Internal error: cannot check null symbol table");
 
   auto itr = table->table.find(name);
   if (itr == table->table.end()) {
@@ -423,19 +535,13 @@ bool add(string name, Symbol symbol) {
  
   if (exists(name)) {
     ss << "Error on line " << to_string(lineNum) << ":" << to_string(linePos) << " : Redefinition of " << name << "\n";
-    yyerror(ss.str().c_str());
+    cout << (ss.str().c_str());
+    cout << ss.str();
+    exit(-1);
   }
-  if (currentScope == nullptr) yyerror("Internal error: scope not set");
+  if (currentScope == nullptr) cout << ("Internal error: scope not set");
 
   currentScope->table.insert(make_pair(name, symbol));
-  cout << "Symbol Table size is now: " << currentScope->table.size() << endl; //DEBUG
-
-  // DEBUG
-  for(auto it = currentScope->table.begin(); it != currentScope->table.end(); ++it)
-  {
-    std::cout << it->first << " " << it->second.value << " " << it->second.type << "\n";
-  }
-
 
   return true;
 }
