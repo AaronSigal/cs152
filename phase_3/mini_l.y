@@ -65,7 +65,7 @@ struct VarContainer{
   char* type;  // can be VARIABLE or ARRAY
   char* index; // index for if this is an array
   char* index2;
-} v;
+} varContainer;
 
 struct StatementContainer{
   char* code;
@@ -73,19 +73,23 @@ struct StatementContainer{
   char* label;
   char* type;
   char* array_name;
-  } s;
+  } statementContainer;
 
 struct ExpressionContainer {
   char* code;
   char* place;
   char* array_name;
   char* type; // VARIABLE, ARRAY, or 2DARRAY
-} e;
+} expressionContainer;
   
 struct Generic{
    char* place; // Destination of value
    char* code;  // Code used to get value
 } generic;
+
+struct Comparator{
+  char* operation;
+} comparator;
 
 }
 
@@ -98,8 +102,9 @@ struct Generic{
 %token <ival> NUMBER
 
 %type <generic> program functions function  params locals body
-%type <e> var term expression relation_expr relation-and-expr declaration expression_chain declarations vars
-%type <s> statement statements
+%type <expressionContainer> var term expression relation-expr relation-and-expr declaration expression_chain declarations vars multiplicative_expression multiplicative_expression_0 bool-expr
+%type <statementContainer> statement statements
+%type <comparator> comp
 
 %start program
 
@@ -262,55 +267,187 @@ declaration: IDENT COMMA declaration
 
 statements: statements SEMICOLON 
             { //printf("statements -> statement SEMICOLON statements\n");
-          }
+              $$.code = $1.code;
+              $$.place = $1.place;
+            }
             | /*epsilon*/
             {//printf("statements -> epsilon\n"); 
-          }
+              $$.code = "";
+              $$.place = "";
+            }
             | statements SEMICOLON statement
             {//printf("statements -> statements SEMICOLON statement\n");
-          }
+              ostringstream oss;
+              oss << $1.code;
+              oss << $3.code;
+              $$.code = strdup(oss.str().c_str());
+            }
             | statement
             {//printf("statements -> statement\n");
-          }
+              $$.code = $1.code;
+              $$.place = $1.place;
+
+              string label = string($1.label);
+                    
+              // Fixes a seg-fault by manually setting  to an empty string
+              if (label.length() > 0) {
+                $$.label = $1.label;
+              } else {
+                $$.label = "";
+              }
+            }
 
 statement: var ASSIGN expression
-           {//printf("statement -> var ASSIGN expression\n");
+         {//printf("statement -> var ASSIGN expression\n");
+            ostringstream oss;
+            $$.code = "";
+            if (!exists(string($1.place))) {
+              oss << "Error on line" << lineNum << ":" << linePos << ": variable " << $1.place << " has not been delcared!" << endl;
+              cout << oss.str();
+              exit(-1);
+            }
+
+            
+            if(strcmp($1.type, "ARRAY") == 0) {
+
+              oss << $1.code << $3.code;
+              oss << "[]= " << $1.array_name << ", " << $1.place << ", " << $3.place << endl;
+              $$.code = strdup(oss.str().c_str());
+            } else if (strcmp($1.type, "VARIABLE") == 0) {
+
+              oss << $3.code;
+              oss << " = " << $1.place << ", " << $3.place << endl;
+              $$.code = strdup(oss.str().c_str());
+
+            } else if (strcmp($1.type, "2DARRAY") == 0) {
+
+            }
+
+            $$.label = "";
+
+          }
+         | IF bool-expr THEN statements ENDIF
+         {//printf("statement -> IF bool-expr THEN statements ENDIF\n");
+            $$.code = "";
+            $$.label = "";
+
+            string if_label = new_label();
+            string skip_label = new_label();
+
+            ostringstream oss;
+
+            oss << $2.code; // if condition code
+            oss << "?:= " << if_label << ", " << $2.place << endl; // set the jump to if label
+            oss << ":= " << skip_label << endl; // set jump to skip label
+
+            oss << ": " << if_label << endl;    // set if label
+            oss << $4.code;                     // if-body code
+
+            oss << ": " << skip_label << endl;  // skip label
+
+            $$.code = strdup(oss.str().c_str());
          }
-           | IF bool-expr THEN statements ENDIF
-           {//printf("statement -> IF bool-expr THEN statements ENDIF\n");
+         | IF bool-expr THEN statements ELSE statements ENDIF
+         {//printf("statement -> IF bool-expr THEN statements ELSE statements ENDIF \n");
+            $$.code = "";
+            $$.label = "";
+
+            string if_label = new_label();
+            string else_label = new_label();
+            ostringstream oss;
+          
+            oss << $2.code; // if condition code
+            oss << "?:= " << if_label << ", " << $2.place << endl; // set if label
+            oss << ":= " << else_label << endl;                        // set else label
+
+            oss << ": " << if_label << endl;                           // mark if label
+            oss << $4.code;                                            // if code
+
+            oss << ": " << else_label << endl;                         // mark else label
+            oss << $6.code;                                            // else code
+            
+            $$.code = strdup(oss.str().c_str());                       // dump code to statement
          }
-           | IF bool-expr THEN statements ELSE statements ENDIF
-           {//printf("statement -> IF bool-expr THEN statements ELSE statements ENDIF \n");
+         | WHILE bool-expr BEGINLOOP statements ENDLOOP
+         {//printf("statement -> WHILE bool-expr BEGINLOOP statements ENDLOOP \n");
+            $$.code = "";
+            $$.label = "";
+            string while_body = new_label();
+            string skip_label = new_label();
+            string while_condition = new_label();
+            ostringstream oss;
+            
+            if (string($4.label).length() == 0) { // if there's no labels within the statements block
+              oss << ": " << while_condition << endl;
+              oss << $2.code;
+              oss << "?:= " << while_body << ", " << $2.place << endl;
+              oss << ":= " << skip_label << endl;
+
+              oss << ": " << while_body << endl;
+              oss << $4.code;
+
+              oss << ":= " << while_condition << endl;
+              oss << ": " << skip_label << endl;
+            } else {
+              oss << ": " << while_condition << endl;
+              oss << $2.code;
+              oss << "?:= " << while_body << ", " << $2.place << endl;
+              oss << ":= " << skip_label << endl;
+
+              oss << ": " << while_body << endl;
+              oss << $4.code;
+              oss << ": " << $4.label << endl;  
+
+              oss << ":= " << while_condition << endl;
+              oss << ": " << skip_label << endl;
+              
+            }
+          
+
+          $$.code = strdup(oss.str().c_str());
          }
-           | WHILE bool-expr BEGINLOOP statements ENDLOOP
-           {//printf("statement -> WHILE bool-expr BEGINLOOP statements ENDLOOP \n");
+         | DO BEGINLOOP statements ENDLOOP WHILE bool-expr
+         {//printf("statement -> DO BEGINLOOP statements ENDLOOP WHILE bool-expr\n");
+            $$.code = "";
+            $$.label = "";
          }
-           | DO BEGINLOOP statements ENDLOOP WHILE bool-expr
-           {//printf("statement -> DO BEGINLOOP statements ENDLOOP WHILE bool-expr\n");
+         | FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP
+         {//printf("statement -> FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP\n");
+            $$.code = "";
+            $$.label = "";
          }
-           | FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP
-           {//printf("statement -> FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP\n");
+         | READ vars
+         {//printf("statement -> READ vars\n");
+            $$.code = "";
+            $$.label = "";
          }
-           | READ vars
-           {//printf("statement -> READ vars\n");
+         | WRITE vars
+         {//printf("statement -> WRITE vars \n");
+            $$.code = "";
+            $$.label = "";
          }
-           | WRITE vars
-           {//printf("statement -> WRITE vars \n");
+         | CONTINUE
+         {//printf("statement -> CONTINUE\n");
+            $$.code = "";
+            $$.label = "";
          }
-           | CONTINUE
-           {//printf("statement -> CONTINUE\n");
-         }
-           | RETURN expression
-           {//printf("statement -> RETURN expression\n");
+         | RETURN expression
+         {//printf("statement -> RETURN expression\n");
+            $$.code = "";
+            $$.label = "";
          }
 
 term: var
       {//printf("term -> var\n");
         $$.place = $1.place;
+        $$.code = $1.code;
+        $$.type = $1.type;
+        $$.array_name = $1.array_name;
       }
       | NUMBER
       {//printf("term -> NUMBER: %d\n", $1);
         $$.code = "";
+        $$.type = "VARIABLE";
         $$.place = strdup(to_string($1).c_str());
       }
       
@@ -322,8 +459,9 @@ term: var
           function_calls.insert($1);
         }
 
-        $$.code = $3.code;
+        oss << $3.code;
         $$.place = $3.place;
+        $$.type = $3.type;
 
         string temp = new_temp();
         oss << "param " << $3.place << endl;
@@ -348,97 +486,233 @@ term: var
 
 multiplicative_expression_0: multiplicative_expression
                             {//printf("multiplicative_expression_0 -> multiplicative_expression\n");
-                          }
+                              $$.code = $1.code;
+                              $$.place = $1.place;
+                            }
 
 
 multiplicative_expression: term MULT multiplicative_expression_0
                            {//printf("multiplicative_expression -> term MULT multiplicative_expression\n");
-                         }
+                            ostringstream oss;
+                            oss << $1.code << $3.code;
+                            string temp = new_temp();
+                            oss << ". " << temp << endl;
+                            oss << "* " << temp << ", " << $1.place << ", " << $3.place << endl;
+                            $$.code = strdup(oss.str().c_str());
+                            $$.place = strdup(temp.c_str());
+
+                           }
                            | term DIV multiplicative_expression_0
                            {//printf("multiplicative_expression -> term DIV multiplicative_expression\n");
-                         }
+                              ostringstream oss;
+                              string temp = new_temp();
+                              oss << $1.code << $3.code;
+                              oss << ". " << temp << endl;
+                              oss << "/ " << temp << ", " << $1.place << ", " << $3.place << endl;
+                              $$.code = strdup(oss.str().c_str());
+                              $$.place = strdup(temp.c_str()); 
+                           }
                            | term MOD multiplicative_expression_0
                            {//printf("multiplicative_expression -> term MOD multiplicative_expression\n");
-                         }
+                              ostringstream oss;
+                              oss << $1.code << $3.code;
+                              string temp = new_temp();
+                              oss << ". " << temp << endl;
+                              oss << "% " << temp << ", " << $1.place << ", " << $3.place << endl;
+                              $$.code = strdup(oss.str().c_str());
+                              $$.place = strdup(temp.c_str());
+                           }
                            | term
                            {//printf("multiplicative_expression -> term\n");
-                         }
+                            if (strlen($1.code) > 0){
+
+                              ostringstream oss;
+                              if (strcmp($1.type, "ARRAY") == 0){
+
+                                string temp = new_temp();
+                                
+                                oss << $1.code;
+                                oss << ". " << temp << endl;
+                                oss << "=[] " << temp << ", " << $1.array_name << ", " << $1.place << endl;
+
+                                $$.code = strdup(oss.str().c_str());
+                                $$.place = strdup(temp.c_str());
+                              } else {
+                                $$.code = $1.code;
+                                $$.place = $1.place;
+                              }
+                            } else {
+                              ostringstream oss;
+                              string temp = new_temp();
+                              oss << ". " << temp << endl;
+                              oss << "= " << temp << ", " << $1.place << endl;
+                              $$.code = strdup(oss.str().c_str());
+                              $$.place = strdup(temp.c_str());
+                            }
+                           }
 
 bool-expr: relation-and-expr OR bool-expr
             {//printf("bool-expr -> relation-and-expr OR bool-expr\n");
-          }
+              ostringstream oss;
+              string temp = new_temp();
+
+              oss << $1.code << $3.code;
+              oss << ". " << temp << endl;
+              oss << "|| " << temp << ", " << $1.place << ", " << $3.place << endl;
+
+              $$.code = strdup(oss.str().c_str());
+              $$.place = strdup(temp.c_str());
+            }
             | relation-and-expr
             {//printf("bool-expr -> relation-and-expr\n");
-          }
+              $$.code = $1.code;
+              $$.place = $1.place;
+            }
 
 relation-and-expr: relation-expr AND relation-and-expr
                     {//printf("relation-and-expr -> relation-expr_0 AND relation-and-expr\n");
-                  }
+                      ostringstream oss;
+                      string temp = new_temp();
+
+                      oss << $1.code << $3.code;
+                      oss << ". " << temp << endl;
+                      oss << "&& " << temp << ", " << $1.place << ", " << $3.place << endl;
+
+                      $$.code = strdup(oss.str().c_str());
+                      $$.place = strdup(temp.c_str());
+                    }
                     | relation-expr
                     {//printf("relation-and-expr -> relation-expr_0\n");
-                  }
+                      $$.code = $1.code;
+                      $$.place = $1.place;
+                    }
 
 
 relation-expr: expression comp expression
                 {//printf("relation_expr -> expression comp expression\n");
-              }
+                  ostringstream oss;
+                  string temp = new_temp();
+
+                  oss << $1.code << $3.code;
+                  oss << ". " << temp << "\n"; 
+                  oss << $2.operation << " " << temp << ", " << $1.place << ", " << $3.place << "\n";
+
+                  $$.code = strdup(oss.str().c_str());
+                  $$.place = strdup(temp.c_str());
+
+                }
                 | NOT expression comp expression
                 {//printf("relation_expr -> NOT expression comp expression\n");
-              }
+                  ostringstream oss;
+                  string temp = new_temp();
+
+                  oss << $2.code << $4.code;
+                  oss << "!. " << temp << "\n"; 
+                  oss << $3.operation << " " << temp << ", " << $2.place << ", " << $4.place << "\n";
+
+                  $$.code = strdup(oss.str().c_str());
+                  $$.place = strdup(temp.c_str());
+                }
                 | TRUE
                 {//printf("relation_expr -> TRUE\n" );
-              }
+                  $$.code = "";
+                  $$.place = "1";
+                }
                 | FALSE
                 {//printf("relation_expr -> FALSE\n");
-              }
+                  $$.code = "";
+                  $$.place = "0";
+                }
                 | NOT TRUE
                 {//printf("relation_expr -> NOT TRUE\n" );
-              }
+                  $$.code = "";
+                  $$.place = "!1";
+                }
                 | NOT FALSE
                 {//printf("relation_expr -> NOT FALSE\n");
-              }
+                  $$.code = "";
+                  $$.place = "!0";
+                }
                 | L_PAREN bool-expr R_PAREN
                 {//printf("relation_expr -> L_PAREN bool-expr R_PAREN\n");
-              }
+                  $$.code = $2.code;
+                  $$.place = $2.place;
+                }
                 | NOT L_PAREN bool-expr R_PAREN
-                {//printf("relation_expr -> NOT L_PAREN bool-expr R_PAREN\n");
-              }
+                {//print f("relation_expr -> NOT L_PAREN bool-expr R_PAREN\n");
+                    ostringstream oss;
+
+                    $$.code = $3.code;
+
+                    oss << "!" << $3.place;
+                    $$.place = strdup(oss.str().c_str());
+                }
 
 comp: EQ
       {//printf("comp -> EQ\n");
-    }
+        $$.operation = "==";
+      }
       | NEQ
       {//printf("comp -> NEQ\n");
-    }
+        $$.operation = "!=";
+      }
       | LT
       {//printf("comp -> LT\n");
-    }
+        $$.operation = "<";
+      }
       | GT
       {//printf("comp -> GT\n");
-    }
+        $$.operation = ">";
+      }
       | LTE
       {//printf("comp -> LTE\n");
-    }
+        $$.operation = "<=";
+      }
       | GTE
       {//printf("comp -> GTE\n");
-    }
+        $$.operation = ">=";
+      }
 
 expression: multiplicative_expression ADD expression
             {//printf("expression -> multiplicative_expression PLUS expression\n");
-          }
+              ostringstream oss;
+              string temp = new_temp();
+
+              oss << $1.code << $3.code;   // append code for both expressions
+              oss << ". " << temp << endl; // create temp var
+              oss << "+ " << temp << ", " << $1.place << ", " << $3.place << endl; // Add call
+              $$.code      = strdup( oss.str().c_str() ); // Set code
+              $$.place     = strdup( temp.c_str()      ); // Set value
+            }
             | multiplicative_expression SUB expression
             {//printf("expression -> multiplicative_expression SUB expression\n");
-          }
+              ostringstream oss;
+              string temp = new_temp();
+
+              oss << $1.code << $3.code;   // append code for both expressions
+              oss << ". " << temp << endl; // create temp var
+              oss << "- " << temp << ", " << $1.place << ", " << $3.place << endl; // Sub call
+              $$.code      = strdup( oss.str().c_str() ); // Set code
+              $$.place     = strdup( temp.c_str()      ); // Set value
+
+            }
             | multiplicative_expression
             {//printf("expression -> multiplicative_expression\n");
-          }
+              $$.place = $1.place;
+              $$.code = $1.code;
+            }
 
 expression_chain: expression_chain COMMA expression
                   {//printf("expression_chain -> expression_chain COMMA expression\n");
-                }
+                    ostringstream oss;
+                    oss << $1.code << $3.code;
+                    $$.code = strdup(oss.str().c_str());
+                    //$$.place = ""; // Tries to avoid any seg-faults from null values. This may, however, hide some incorrect logic.
+                  }
                   | expression
                   {//printf("expression_chain -> expression\n");
-
+                    $$.code = $1.code;
+                    $$.place = $1.place;
                   }
 
 vars: vars COMMA var
@@ -446,22 +720,23 @@ vars: vars COMMA var
         ostringstream oss;
         oss << $1.place << "#" << $3.place;
         $$.place = strdup(oss.str().c_str());
+        $$.code = "";
       }
       | var
       {//printf("vars -> var\n");
-        if($1.type == "ARRAY") {
+        if(strcmp($1.type, "ARRAY") == 0) {
           $$.code = $1.code;
           $$.place = $1.place;
           $$.type == $1.type;
         }
 
-        if ($1.type == "ARRAY2D") {
+        if (strcmp($1.type, "ARRAY2D") == 0) {
           $$.code = $1.code;
           $$.place = $1.place;
           $$.type == $1.type;
         }
 
-        if ($1.type == "VARIABLE") {
+        if (strcmp($1.type, "VARIABLE") == 0) {
           $$.code = $1.code;
           $$.place = $1.place;
         }
@@ -470,6 +745,7 @@ vars: vars COMMA var
 var: IDENT
     {//printf("var -> IDENT  %s \n", $1);
       $$.code = "";
+      $$.type = "VARIABLE";
       $$.place = $1;
 
     }

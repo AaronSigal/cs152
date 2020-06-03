@@ -116,7 +116,7 @@ struct VarContainer{
   char* type;  // can be VARIABLE or ARRAY
   char* index; // index for if this is an array
   char* index2;
-} v;
+} varContainer;
 
 struct StatementContainer{
   char* code;
@@ -124,22 +124,26 @@ struct StatementContainer{
   char* label;
   char* type;
   char* array_name;
-  } s;
+  } statementContainer;
 
 struct ExpressionContainer {
   char* code;
   char* place;
   char* array_name;
   char* type; // VARIABLE, ARRAY, or 2DARRAY
-} e;
+} expressionContainer;
   
 struct Generic{
    char* place; // Destination of value
    char* code;  // Code used to get value
 } generic;
 
+struct Comparator{
+  char* operation;
+} comparator;
 
-#line 143 "y.tab.h" /* yacc.c:1909  */
+
+#line 147 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
