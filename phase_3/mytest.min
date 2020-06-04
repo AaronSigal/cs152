@@ -5,8 +5,7 @@ endparams
 beginlocals
 
   n : integer;
-  i : integer; 
-  j : integer;
+  i, j: integer; 
   k : integer;
   t : array [20] of integer;
 
@@ -37,7 +36,7 @@ beginbody	## main program
      t[i] := t[j];
      t[j] := k;
   else
-     while i >= j or false 
+     while  i >= j or false 
        beginloop
         k := (1 + i - j ) % 3;
         i := i - 1;

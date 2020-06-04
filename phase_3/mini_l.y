@@ -220,6 +220,30 @@ declarations: declarations SEMICOLON
 
 declaration: IDENT COMMA declaration
               {//printf("decleration -> IDENT COMMA declaration\n");
+                
+                Symbol sym = Symbol();
+
+                if (store_as_param == true) {
+                  sym.type = "PARAM";
+                } else {
+                  sym.type = "VARIABLE";
+                }
+
+                sym.value = "0";
+
+                add(string($1), sym); // Try to add the variable to the symbol table
+                ostringstream o;
+                o << $1 << "#" << $3.place;
+                $$.place = strdup(o.str().c_str());
+
+                ostringstream _o;
+                _o << $3.code;
+                _o << ". " << $1 << endl;
+                if (store_as_param == true) {
+                  _o << "= " << $1 << ", $0" << endl;
+                }
+                $$.code = strdup(_o.str().c_str());
+                
             }
              | IDENT COLON INTEGER
               {//printf("declaration -> IDENT COLON NUMBER\n");
@@ -637,6 +661,13 @@ multiplicative_expression: term MULT multiplicative_expression_0
                             string temp = new_temp();
                             o << ". " << temp << endl;
                             o << "* " << temp << ", " << $1.place << ", " << $3.place << endl;
+                            
+                            Symbol sym = Symbol();
+                            sym.type = "VARIABLE";
+                            sym.code = strdup( o.str().c_str() ); // Set code
+                            sym.value = "";
+                            add(temp, sym);
+
                             $$.code = strdup(o.str().c_str());
                             $$.place = strdup(temp.c_str());
 
@@ -648,6 +679,13 @@ multiplicative_expression: term MULT multiplicative_expression_0
                               o << $1.code << $3.code;
                               o << ". " << temp << endl;
                               o << "/ " << temp << ", " << $1.place << ", " << $3.place << endl;
+
+                              Symbol sym = Symbol();
+                              sym.type = "VARIABLE";
+                              sym.code = strdup( o.str().c_str() ); // Set code
+                              sym.value = "";
+                              add(temp, sym);
+
                               $$.code = strdup(o.str().c_str());
                               $$.place = strdup(temp.c_str()); 
                            }
@@ -658,12 +696,19 @@ multiplicative_expression: term MULT multiplicative_expression_0
                               string temp = new_temp();
                               o << ". " << temp << endl;
                               o << "% " << temp << ", " << $1.place << ", " << $3.place << endl;
+                              
+                              Symbol sym = Symbol();
+                              sym.type = "VARIABLE";
+                              sym.code = strdup( o.str().c_str() ); // Set code
+                              sym.value = "";
+                              add(temp, sym);
+
                               $$.code = strdup(o.str().c_str());
                               $$.place = strdup(temp.c_str());
                            }
                            | term
                            {//printf("multiplicative_expression -> term\n");
-                            if (strlen($1.code) > 0){
+                            if (string($1.code).length() > 0){
 
                               ostringstream o;
                               if (strcmp($1.type, "ARRAY") == 0){
@@ -673,6 +718,13 @@ multiplicative_expression: term MULT multiplicative_expression_0
                                 o << $1.code;
                                 o << ". " << temp << endl;
                                 o << "=[] " << temp << ", " << $1.array_name << ", " << $1.place << endl;
+
+
+                                Symbol sym = Symbol();
+                                sym.type = "VARIABLE";
+                                sym.code = strdup( o.str().c_str() ); // Set code
+                                sym.value = "";
+                                add(temp, sym);
 
                                 $$.code = strdup(o.str().c_str());
                                 $$.place = strdup(temp.c_str());
@@ -685,6 +737,13 @@ multiplicative_expression: term MULT multiplicative_expression_0
                               string temp = new_temp();
                               o << ". " << temp << endl;
                               o << "= " << temp << ", " << $1.place << endl;
+                              
+                              Symbol sym = Symbol();
+                              sym.type = "VARIABLE";
+                              sym.code = strdup( o.str().c_str() ); // Set code
+                              sym.value = "";
+                              add(temp, sym);
+                              
                               $$.code = strdup(o.str().c_str());
                               $$.place = strdup(temp.c_str());
                             }
@@ -820,6 +879,13 @@ expression: multiplicative_expression ADD expression
               o << $1.code << $3.code;   // append code for both expressions
               o << ". " << temp << endl; // create temp var
               o << "+ " << temp << ", " << $1.place << ", " << $3.place << endl; // Add call
+
+              Symbol sym = Symbol();
+              sym.type = "VARIABLE";
+              sym.code = strdup( o.str().c_str() ); // Set code
+              sym.value = "";
+              add(temp, sym);
+
               $$.code      = strdup( o.str().c_str() ); // Set code
               $$.place     = strdup( temp.c_str()      ); // Set value
             }
@@ -831,6 +897,13 @@ expression: multiplicative_expression ADD expression
               o << $1.code << $3.code;   // append code for both expressions
               o << ". " << temp << endl; // create temp var
               o << "- " << temp << ", " << $1.place << ", " << $3.place << endl; // Sub call
+              
+              Symbol sym = Symbol();
+              sym.type = "VARIABLE";
+              sym.code = strdup( o.str().c_str() ); // Set code
+              sym.value = "";
+              add(temp, sym);
+
               $$.code      = strdup( o.str().c_str() ); // Set code
               $$.place     = strdup( temp.c_str()      ); // Set value
 

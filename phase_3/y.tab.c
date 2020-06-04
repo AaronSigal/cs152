@@ -649,13 +649,13 @@ static const yytype_int8 yytranslate[] =
 static const yytype_int16 yyrline[] =
 {
        0,   114,   114,   132,   135,   141,   146,   150,   153,   156,
-     159,   162,   194,   200,   203,   214,   221,   224,   250,   273,
-     285,   292,   297,   305,   321,   350,   371,   392,   430,   458,
-     463,   506,   549,   565,   579,   586,   593,   613,   616,   619,
-     622,   626,   633,   644,   654,   664,   693,   705,   711,   723,
-     730,   743,   755,   760,   765,   770,   775,   780,   790,   794,
-     798,   802,   806,   810,   815,   826,   838,   844,   851,   857,
-     864,   884,   891,   898
+     159,   162,   194,   200,   203,   214,   221,   248,   274,   297,
+     309,   316,   321,   329,   345,   374,   395,   416,   454,   482,
+     487,   530,   573,   589,   603,   610,   617,   637,   640,   643,
+     646,   650,   657,   675,   692,   709,   752,   764,   770,   782,
+     789,   802,   814,   819,   824,   829,   834,   839,   849,   853,
+     857,   861,   865,   869,   874,   892,   911,   917,   924,   930,
+     937,   957,   964,   971
 };
 #endif
 
@@ -1707,12 +1707,36 @@ yyreduce:
   case 16:
 #line 222 "mini_l.y"
               {//printf("decleration -> IDENT COMMA declaration\n");
+                
+                Symbol sym = Symbol();
+
+                if (store_as_param == true) {
+                  sym.type = "PARAM";
+                } else {
+                  sym.type = "VARIABLE";
+                }
+
+                sym.value = "0";
+
+                add(string((yyvsp[-2].sval)), sym); // Try to add the variable to the symbol table
+                ostringstream o;
+                o << (yyvsp[-2].sval) << "#" << (yyvsp[0].expressionContainer).place;
+                (yyval.expressionContainer).place = strdup(o.str().c_str());
+
+                ostringstream _o;
+                _o << (yyvsp[0].expressionContainer).code;
+                _o << ". " << (yyvsp[-2].sval) << endl;
+                if (store_as_param == true) {
+                  _o << "= " << (yyvsp[-2].sval) << ", $0" << endl;
+                }
+                (yyval.expressionContainer).code = strdup(_o.str().c_str());
+                
             }
-#line 1712 "y.tab.c"
+#line 1736 "y.tab.c"
     break;
 
   case 17:
-#line 225 "mini_l.y"
+#line 249 "mini_l.y"
               {//printf("declaration -> IDENT COLON NUMBER\n");
                 string s((yyvsp[-2].sval));
                 Symbol sym = Symbol();
@@ -1738,11 +1762,11 @@ yyreduce:
 
                 add((yyvsp[-2].sval), sym);
               }
-#line 1742 "y.tab.c"
+#line 1766 "y.tab.c"
     break;
 
   case 18:
-#line 251 "mini_l.y"
+#line 275 "mini_l.y"
               {//printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
                 string s((yyvsp[-7].sval));
                 Symbol sym = Symbol();
@@ -1765,11 +1789,11 @@ yyreduce:
 
                 add((yyvsp[-7].sval), sym);
               }
-#line 1769 "y.tab.c"
+#line 1793 "y.tab.c"
     break;
 
   case 19:
-#line 274 "mini_l.y"
+#line 298 "mini_l.y"
               {//printf("declaration -> IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");
                 string s((yyvsp[-10].sval));
                 Symbol sym = Symbol();
@@ -1779,31 +1803,31 @@ yyreduce:
 
                 add((yyvsp[-10].sval), sym);
               }
-#line 1783 "y.tab.c"
+#line 1807 "y.tab.c"
     break;
 
   case 20:
-#line 286 "mini_l.y"
+#line 310 "mini_l.y"
             { //printf("statements -> statement SEMICOLON statements\n");
               (yyval.statementContainer).code = (yyvsp[-1].statementContainer).code;
               (yyval.statementContainer).place = (yyvsp[-1].statementContainer).place;
               (yyval.statementContainer).label = "";
             }
-#line 1793 "y.tab.c"
+#line 1817 "y.tab.c"
     break;
 
   case 21:
-#line 292 "mini_l.y"
+#line 316 "mini_l.y"
             {//printf("statements -> epsilon\n"); 
               (yyval.statementContainer).code = "";
               (yyval.statementContainer).place = "";
               (yyval.statementContainer).label = "";
             }
-#line 1803 "y.tab.c"
+#line 1827 "y.tab.c"
     break;
 
   case 22:
-#line 298 "mini_l.y"
+#line 322 "mini_l.y"
             {//printf("statements -> statements SEMICOLON statement\n");
               (yyval.statementContainer).label = "";
               ostringstream o;
@@ -1811,11 +1835,11 @@ yyreduce:
               o << (yyvsp[0].statementContainer).code;
               (yyval.statementContainer).code = strdup(o.str().c_str());
             }
-#line 1815 "y.tab.c"
+#line 1839 "y.tab.c"
     break;
 
   case 23:
-#line 306 "mini_l.y"
+#line 330 "mini_l.y"
             {//printf("statements -> statement\n");
               (yyval.statementContainer).label = "";
               (yyval.statementContainer).code = (yyvsp[0].statementContainer).code;
@@ -1830,11 +1854,11 @@ yyreduce:
                 (yyval.statementContainer).label = "";
               }
             }
-#line 1834 "y.tab.c"
+#line 1858 "y.tab.c"
     break;
 
   case 24:
-#line 322 "mini_l.y"
+#line 346 "mini_l.y"
          {//printf("statement -> var ASSIGN expression\n");
             ostringstream o;
             (yyval.statementContainer).code = "";
@@ -1863,11 +1887,11 @@ yyreduce:
             (yyval.statementContainer).label = "";
 
           }
-#line 1867 "y.tab.c"
+#line 1891 "y.tab.c"
     break;
 
   case 25:
-#line 351 "mini_l.y"
+#line 375 "mini_l.y"
          {//printf("statement -> IF bool-expr THEN statements ENDIF\n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -1888,11 +1912,11 @@ yyreduce:
 
             (yyval.statementContainer).code = strdup(o.str().c_str());
          }
-#line 1892 "y.tab.c"
+#line 1916 "y.tab.c"
     break;
 
   case 26:
-#line 372 "mini_l.y"
+#line 396 "mini_l.y"
          {//printf("statement -> IF bool-expr THEN statements ELSE statements ENDIF \n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -1913,11 +1937,11 @@ yyreduce:
             
             (yyval.statementContainer).code = strdup(o.str().c_str());                       // dump code to statement
          }
-#line 1917 "y.tab.c"
+#line 1941 "y.tab.c"
     break;
 
   case 27:
-#line 393 "mini_l.y"
+#line 417 "mini_l.y"
          {//printf("statement -> WHILE bool-expr BEGINLOOP statements ENDLOOP \n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -1955,11 +1979,11 @@ yyreduce:
 
           (yyval.statementContainer).code = strdup(o.str().c_str());
          }
-#line 1959 "y.tab.c"
+#line 1983 "y.tab.c"
     break;
 
   case 28:
-#line 431 "mini_l.y"
+#line 455 "mini_l.y"
          {//printf("statement -> DO BEGINLOOP statements ENDLOOP WHILE bool-expr\n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -1987,20 +2011,20 @@ yyreduce:
           (yyval.statementContainer).code = strdup(o.str().c_str());
 
          }
-#line 1991 "y.tab.c"
+#line 2015 "y.tab.c"
     break;
 
   case 29:
-#line 459 "mini_l.y"
+#line 483 "mini_l.y"
          {//printf("statement -> FOR var ASSIGN NUMBER SEMICOLON bool-expr SEMICOLON var ASSIGN expression BEGINLOOP statements ENDLOOP\n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
          }
-#line 2000 "y.tab.c"
+#line 2024 "y.tab.c"
     break;
 
   case 30:
-#line 464 "mini_l.y"
+#line 488 "mini_l.y"
          {//printf("statement -> READ vars\n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -2043,11 +2067,11 @@ yyreduce:
           }  
           (yyval.statementContainer).code = strdup(o.str().c_str());
          }
-#line 2047 "y.tab.c"
+#line 2071 "y.tab.c"
     break;
 
   case 31:
-#line 507 "mini_l.y"
+#line 531 "mini_l.y"
          {//printf("statement -> WRITE vars \n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -2090,11 +2114,11 @@ yyreduce:
           }  
           (yyval.statementContainer).code = strdup(o.str().c_str());
          }
-#line 2094 "y.tab.c"
+#line 2118 "y.tab.c"
     break;
 
   case 32:
-#line 550 "mini_l.y"
+#line 574 "mini_l.y"
          {//printf("statement -> CONTINUE\n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -2110,11 +2134,11 @@ yyreduce:
 
             (yyval.statementContainer).place = strdup(label.c_str());
          }
-#line 2114 "y.tab.c"
+#line 2138 "y.tab.c"
     break;
 
   case 33:
-#line 566 "mini_l.y"
+#line 590 "mini_l.y"
          {//printf("statement -> RETURN expression\n");
             (yyval.statementContainer).code = "";
             (yyval.statementContainer).label = "";
@@ -2127,32 +2151,32 @@ yyreduce:
 
             (yyval.statementContainer).code = strdup(o.str().c_str());
          }
-#line 2131 "y.tab.c"
+#line 2155 "y.tab.c"
     break;
 
   case 34:
-#line 580 "mini_l.y"
+#line 604 "mini_l.y"
       {//printf("term -> var\n");
         (yyval.expressionContainer).place = (yyvsp[0].expressionContainer).place;
         (yyval.expressionContainer).code = (yyvsp[0].expressionContainer).code;
         (yyval.expressionContainer).type = (yyvsp[0].expressionContainer).type;
         (yyval.expressionContainer).array_name = (yyvsp[0].expressionContainer).array_name;
       }
-#line 2142 "y.tab.c"
+#line 2166 "y.tab.c"
     break;
 
   case 35:
-#line 587 "mini_l.y"
+#line 611 "mini_l.y"
       {//printf("term -> NUMBER: %d\n", $1);
         (yyval.expressionContainer).code = "";
         (yyval.expressionContainer).type = "VARIABLE";
         (yyval.expressionContainer).place = strdup(to_string((yyvsp[0].ival)).c_str());
       }
-#line 2152 "y.tab.c"
+#line 2176 "y.tab.c"
     break;
 
   case 36:
-#line 594 "mini_l.y"
+#line 618 "mini_l.y"
       {//printf("term -> IDENT L_PAREN expression_chain R_PAREN\n");
         // Process the function call
         ostringstream o;
@@ -2172,93 +2196,114 @@ yyreduce:
         (yyval.expressionContainer).code = strdup(o.str().c_str());
         (yyval.expressionContainer).place = strdup(temp.c_str());
       }
-#line 2176 "y.tab.c"
+#line 2200 "y.tab.c"
     break;
 
   case 37:
-#line 614 "mini_l.y"
+#line 638 "mini_l.y"
       {//printf("term -> SUB var\n");
     }
-#line 2183 "y.tab.c"
+#line 2207 "y.tab.c"
     break;
 
   case 38:
-#line 617 "mini_l.y"
+#line 641 "mini_l.y"
       {//printf("term -> SUB NUMBER\n");
     }
-#line 2190 "y.tab.c"
+#line 2214 "y.tab.c"
     break;
 
   case 39:
-#line 620 "mini_l.y"
+#line 644 "mini_l.y"
       {//printf("term -> SUB L_PAREN expression R_PAREN\n");
     }
-#line 2197 "y.tab.c"
+#line 2221 "y.tab.c"
     break;
 
   case 40:
-#line 623 "mini_l.y"
+#line 647 "mini_l.y"
       {//printf("term -> SUB IDENT L_PAREN expression_chain R_PAREN\n");
     }
-#line 2204 "y.tab.c"
+#line 2228 "y.tab.c"
     break;
 
   case 41:
-#line 627 "mini_l.y"
+#line 651 "mini_l.y"
                             {//printf("multiplicative_expression_0 -> multiplicative_expression\n");
                               (yyval.expressionContainer).code = (yyvsp[0].expressionContainer).code;
                               (yyval.expressionContainer).place = (yyvsp[0].expressionContainer).place;
                             }
-#line 2213 "y.tab.c"
+#line 2237 "y.tab.c"
     break;
 
   case 42:
-#line 634 "mini_l.y"
+#line 658 "mini_l.y"
                            {//printf("multiplicative_expression -> term MULT multiplicative_expression\n");
                             ostringstream o;
                             o << (yyvsp[-2].expressionContainer).code << (yyvsp[0].expressionContainer).code;
                             string temp = new_temp();
                             o << ". " << temp << endl;
                             o << "* " << temp << ", " << (yyvsp[-2].expressionContainer).place << ", " << (yyvsp[0].expressionContainer).place << endl;
+                            
+                            Symbol sym = Symbol();
+                            sym.type = "VARIABLE";
+                            sym.code = strdup( o.str().c_str() ); // Set code
+                            sym.value = "";
+                            add(temp, sym);
+
                             (yyval.expressionContainer).code = strdup(o.str().c_str());
                             (yyval.expressionContainer).place = strdup(temp.c_str());
 
                            }
-#line 2228 "y.tab.c"
+#line 2259 "y.tab.c"
     break;
 
   case 43:
-#line 645 "mini_l.y"
+#line 676 "mini_l.y"
                            {//printf("multiplicative_expression -> term DIV multiplicative_expression\n");
                               ostringstream o;
                               string temp = new_temp();
                               o << (yyvsp[-2].expressionContainer).code << (yyvsp[0].expressionContainer).code;
                               o << ". " << temp << endl;
                               o << "/ " << temp << ", " << (yyvsp[-2].expressionContainer).place << ", " << (yyvsp[0].expressionContainer).place << endl;
+
+                              Symbol sym = Symbol();
+                              sym.type = "VARIABLE";
+                              sym.code = strdup( o.str().c_str() ); // Set code
+                              sym.value = "";
+                              add(temp, sym);
+
                               (yyval.expressionContainer).code = strdup(o.str().c_str());
                               (yyval.expressionContainer).place = strdup(temp.c_str()); 
                            }
-#line 2242 "y.tab.c"
+#line 2280 "y.tab.c"
     break;
 
   case 44:
-#line 655 "mini_l.y"
+#line 693 "mini_l.y"
                            {//printf("multiplicative_expression -> term MOD multiplicative_expression\n");
                               ostringstream o;
                               o << (yyvsp[-2].expressionContainer).code << (yyvsp[0].expressionContainer).code;
                               string temp = new_temp();
                               o << ". " << temp << endl;
                               o << "% " << temp << ", " << (yyvsp[-2].expressionContainer).place << ", " << (yyvsp[0].expressionContainer).place << endl;
+                              
+                              Symbol sym = Symbol();
+                              sym.type = "VARIABLE";
+                              sym.code = strdup( o.str().c_str() ); // Set code
+                              sym.value = "";
+                              add(temp, sym);
+
                               (yyval.expressionContainer).code = strdup(o.str().c_str());
                               (yyval.expressionContainer).place = strdup(temp.c_str());
                            }
-#line 2256 "y.tab.c"
+#line 2301 "y.tab.c"
     break;
 
   case 45:
-#line 665 "mini_l.y"
+#line 710 "mini_l.y"
                            {//printf("multiplicative_expression -> term\n");
-                            if (strlen((yyvsp[0].expressionContainer).code) > 0){
+                            if (string((yyvsp[0].expressionContainer).code).length() > 0){
 
                               ostringstream o;
                               if (strcmp((yyvsp[0].expressionContainer).type, "ARRAY") == 0){
@@ -2268,6 +2313,13 @@ yyreduce:
                                 o << (yyvsp[0].expressionContainer).code;
                                 o << ". " << temp << endl;
                                 o << "=[] " << temp << ", " << (yyvsp[0].expressionContainer).array_name << ", " << (yyvsp[0].expressionContainer).place << endl;
+
+
+                                Symbol sym = Symbol();
+                                sym.type = "VARIABLE";
+                                sym.code = strdup( o.str().c_str() ); // Set code
+                                sym.value = "";
+                                add(temp, sym);
 
                                 (yyval.expressionContainer).code = strdup(o.str().c_str());
                                 (yyval.expressionContainer).place = strdup(temp.c_str());
@@ -2280,15 +2332,22 @@ yyreduce:
                               string temp = new_temp();
                               o << ". " << temp << endl;
                               o << "= " << temp << ", " << (yyvsp[0].expressionContainer).place << endl;
+                              
+                              Symbol sym = Symbol();
+                              sym.type = "VARIABLE";
+                              sym.code = strdup( o.str().c_str() ); // Set code
+                              sym.value = "";
+                              add(temp, sym);
+                              
                               (yyval.expressionContainer).code = strdup(o.str().c_str());
                               (yyval.expressionContainer).place = strdup(temp.c_str());
                             }
                            }
-#line 2288 "y.tab.c"
+#line 2347 "y.tab.c"
     break;
 
   case 46:
-#line 694 "mini_l.y"
+#line 753 "mini_l.y"
             {//printf("bool-expr -> relation-and-expr OR bool-expr\n");
               ostringstream o;
               string temp = new_temp();
@@ -2300,20 +2359,20 @@ yyreduce:
               (yyval.expressionContainer).code = strdup(o.str().c_str());
               (yyval.expressionContainer).place = strdup(temp.c_str());
             }
-#line 2304 "y.tab.c"
+#line 2363 "y.tab.c"
     break;
 
   case 47:
-#line 706 "mini_l.y"
+#line 765 "mini_l.y"
             {//printf("bool-expr -> relation-and-expr\n");
               (yyval.expressionContainer).code = (yyvsp[0].expressionContainer).code;
               (yyval.expressionContainer).place = (yyvsp[0].expressionContainer).place;
             }
-#line 2313 "y.tab.c"
+#line 2372 "y.tab.c"
     break;
 
   case 48:
-#line 712 "mini_l.y"
+#line 771 "mini_l.y"
                     {//printf("relation-and-expr -> relation-expr_0 AND relation-and-expr\n");
                       ostringstream o;
                       string temp = new_temp();
@@ -2325,20 +2384,20 @@ yyreduce:
                       (yyval.expressionContainer).code = strdup(o.str().c_str());
                       (yyval.expressionContainer).place = strdup(temp.c_str());
                     }
-#line 2329 "y.tab.c"
+#line 2388 "y.tab.c"
     break;
 
   case 49:
-#line 724 "mini_l.y"
+#line 783 "mini_l.y"
                     {//printf("relation-and-expr -> relation-expr_0\n");
                       (yyval.expressionContainer).code = (yyvsp[0].expressionContainer).code;
                       (yyval.expressionContainer).place = (yyvsp[0].expressionContainer).place;
                     }
-#line 2338 "y.tab.c"
+#line 2397 "y.tab.c"
     break;
 
   case 50:
-#line 731 "mini_l.y"
+#line 790 "mini_l.y"
                 {//printf("relation_expr -> expression comp expression\n");
                   ostringstream o;
                   string temp = new_temp();
@@ -2351,11 +2410,11 @@ yyreduce:
                   (yyval.expressionContainer).place = strdup(temp.c_str());
 
                 }
-#line 2355 "y.tab.c"
+#line 2414 "y.tab.c"
     break;
 
   case 51:
-#line 744 "mini_l.y"
+#line 803 "mini_l.y"
                 {//printf("relation_expr -> NOT expression comp expression\n");
                   ostringstream o;
                   string temp = new_temp();
@@ -2367,56 +2426,56 @@ yyreduce:
                   (yyval.expressionContainer).code = strdup(o.str().c_str());
                   (yyval.expressionContainer).place = strdup(temp.c_str());
                 }
-#line 2371 "y.tab.c"
+#line 2430 "y.tab.c"
     break;
 
   case 52:
-#line 756 "mini_l.y"
+#line 815 "mini_l.y"
                 {//printf("relation_expr -> TRUE\n" );
                   (yyval.expressionContainer).code = "";
                   (yyval.expressionContainer).place = "1";
                 }
-#line 2380 "y.tab.c"
+#line 2439 "y.tab.c"
     break;
 
   case 53:
-#line 761 "mini_l.y"
+#line 820 "mini_l.y"
                 {//printf("relation_expr -> FALSE\n");
                   (yyval.expressionContainer).code = "";
                   (yyval.expressionContainer).place = "0";
                 }
-#line 2389 "y.tab.c"
+#line 2448 "y.tab.c"
     break;
 
   case 54:
-#line 766 "mini_l.y"
+#line 825 "mini_l.y"
                 {//printf("relation_expr -> NOT TRUE\n" );
                   (yyval.expressionContainer).code = "";
                   (yyval.expressionContainer).place = "!1";
                 }
-#line 2398 "y.tab.c"
+#line 2457 "y.tab.c"
     break;
 
   case 55:
-#line 771 "mini_l.y"
+#line 830 "mini_l.y"
                 {//printf("relation_expr -> NOT FALSE\n");
                   (yyval.expressionContainer).code = "";
                   (yyval.expressionContainer).place = "!0";
                 }
-#line 2407 "y.tab.c"
+#line 2466 "y.tab.c"
     break;
 
   case 56:
-#line 776 "mini_l.y"
+#line 835 "mini_l.y"
                 {//printf("relation_expr -> L_PAREN bool-expr R_PAREN\n");
                   (yyval.expressionContainer).code = (yyvsp[-1].expressionContainer).code;
                   (yyval.expressionContainer).place = (yyvsp[-1].expressionContainer).place;
                 }
-#line 2416 "y.tab.c"
+#line 2475 "y.tab.c"
     break;
 
   case 57:
-#line 781 "mini_l.y"
+#line 840 "mini_l.y"
                 {//print f("relation_expr -> NOT L_PAREN bool-expr R_PAREN\n");
                     ostringstream o;
 
@@ -2425,59 +2484,59 @@ yyreduce:
                     o << "!" << (yyvsp[-1].expressionContainer).place;
                     (yyval.expressionContainer).place = strdup(o.str().c_str());
                 }
-#line 2429 "y.tab.c"
+#line 2488 "y.tab.c"
     break;
 
   case 58:
-#line 791 "mini_l.y"
+#line 850 "mini_l.y"
       {//printf("comp -> EQ\n");
         (yyval.comparator).operation = "==";
       }
-#line 2437 "y.tab.c"
+#line 2496 "y.tab.c"
     break;
 
   case 59:
-#line 795 "mini_l.y"
+#line 854 "mini_l.y"
       {//printf("comp -> NEQ\n");
         (yyval.comparator).operation = "!=";
       }
-#line 2445 "y.tab.c"
+#line 2504 "y.tab.c"
     break;
 
   case 60:
-#line 799 "mini_l.y"
+#line 858 "mini_l.y"
       {//printf("comp -> LT\n");
         (yyval.comparator).operation = "<";
       }
-#line 2453 "y.tab.c"
+#line 2512 "y.tab.c"
     break;
 
   case 61:
-#line 803 "mini_l.y"
+#line 862 "mini_l.y"
       {//printf("comp -> GT\n");
         (yyval.comparator).operation = ">";
       }
-#line 2461 "y.tab.c"
+#line 2520 "y.tab.c"
     break;
 
   case 62:
-#line 807 "mini_l.y"
+#line 866 "mini_l.y"
       {//printf("comp -> LTE\n");
         (yyval.comparator).operation = "<=";
       }
-#line 2469 "y.tab.c"
+#line 2528 "y.tab.c"
     break;
 
   case 63:
-#line 811 "mini_l.y"
+#line 870 "mini_l.y"
       {//printf("comp -> GTE\n");
         (yyval.comparator).operation = ">=";
       }
-#line 2477 "y.tab.c"
+#line 2536 "y.tab.c"
     break;
 
   case 64:
-#line 816 "mini_l.y"
+#line 875 "mini_l.y"
             {//printf("expression -> multiplicative_expression PLUS expression\n");
               ostringstream o;
               string temp = new_temp();
@@ -2485,14 +2544,21 @@ yyreduce:
               o << (yyvsp[-2].expressionContainer).code << (yyvsp[0].expressionContainer).code;   // append code for both expressions
               o << ". " << temp << endl; // create temp var
               o << "+ " << temp << ", " << (yyvsp[-2].expressionContainer).place << ", " << (yyvsp[0].expressionContainer).place << endl; // Add call
+
+              Symbol sym = Symbol();
+              sym.type = "VARIABLE";
+              sym.code = strdup( o.str().c_str() ); // Set code
+              sym.value = "";
+              add(temp, sym);
+
               (yyval.expressionContainer).code      = strdup( o.str().c_str() ); // Set code
               (yyval.expressionContainer).place     = strdup( temp.c_str()      ); // Set value
             }
-#line 2492 "y.tab.c"
+#line 2558 "y.tab.c"
     break;
 
   case 65:
-#line 827 "mini_l.y"
+#line 893 "mini_l.y"
             {//printf("expression -> multiplicative_expression SUB expression\n");
               ostringstream o;
               string temp = new_temp();
@@ -2500,55 +2566,62 @@ yyreduce:
               o << (yyvsp[-2].expressionContainer).code << (yyvsp[0].expressionContainer).code;   // append code for both expressions
               o << ". " << temp << endl; // create temp var
               o << "- " << temp << ", " << (yyvsp[-2].expressionContainer).place << ", " << (yyvsp[0].expressionContainer).place << endl; // Sub call
+              
+              Symbol sym = Symbol();
+              sym.type = "VARIABLE";
+              sym.code = strdup( o.str().c_str() ); // Set code
+              sym.value = "";
+              add(temp, sym);
+
               (yyval.expressionContainer).code      = strdup( o.str().c_str() ); // Set code
               (yyval.expressionContainer).place     = strdup( temp.c_str()      ); // Set value
 
             }
-#line 2508 "y.tab.c"
+#line 2581 "y.tab.c"
     break;
 
   case 66:
-#line 839 "mini_l.y"
+#line 912 "mini_l.y"
             {//printf("expression -> multiplicative_expression\n");
               (yyval.expressionContainer).place = (yyvsp[0].expressionContainer).place;
               (yyval.expressionContainer).code = (yyvsp[0].expressionContainer).code;
             }
-#line 2517 "y.tab.c"
+#line 2590 "y.tab.c"
     break;
 
   case 67:
-#line 845 "mini_l.y"
+#line 918 "mini_l.y"
                   {//printf("expression_chain -> expression_chain COMMA expression\n");
                     ostringstream o;
                     o << (yyvsp[-2].expressionContainer).code << (yyvsp[0].expressionContainer).code;
                     (yyval.expressionContainer).code = strdup(o.str().c_str());
                     //$$.place = ""; // Tries to avoid any seg-faults from null values. This may, however, hide some incorrect logic.
                   }
-#line 2528 "y.tab.c"
+#line 2601 "y.tab.c"
     break;
 
   case 68:
-#line 852 "mini_l.y"
+#line 925 "mini_l.y"
                   {//printf("expression_chain -> expression\n");
                     (yyval.expressionContainer).code = (yyvsp[0].expressionContainer).code;
                     (yyval.expressionContainer).place = (yyvsp[0].expressionContainer).place;
                   }
-#line 2537 "y.tab.c"
+#line 2610 "y.tab.c"
     break;
 
   case 69:
-#line 858 "mini_l.y"
+#line 931 "mini_l.y"
       {//printf("vars -> vars COMMA var\n");
         ostringstream o;
         o << (yyvsp[-2].expressionContainer).place << "#" << (yyvsp[0].expressionContainer).place;
         (yyval.expressionContainer).place = strdup(o.str().c_str());
         (yyval.expressionContainer).code = "";
       }
-#line 2548 "y.tab.c"
+#line 2621 "y.tab.c"
     break;
 
   case 70:
-#line 865 "mini_l.y"
+#line 938 "mini_l.y"
       {//printf("vars -> var\n");
         if(strcmp((yyvsp[0].expressionContainer).type, "ARRAY") == 0) {
           (yyval.expressionContainer).code = (yyvsp[0].expressionContainer).code;
@@ -2567,41 +2640,41 @@ yyreduce:
           (yyval.expressionContainer).place = (yyvsp[0].expressionContainer).place;
         }
       }
-#line 2571 "y.tab.c"
+#line 2644 "y.tab.c"
     break;
 
   case 71:
-#line 885 "mini_l.y"
+#line 958 "mini_l.y"
     {//printf("var -> IDENT  %s \n", $1);
       (yyval.expressionContainer).code = "";
       (yyval.expressionContainer).type = "VARIABLE";
       (yyval.expressionContainer).place = (yyvsp[0].sval);
 
     }
-#line 2582 "y.tab.c"
+#line 2655 "y.tab.c"
     break;
 
   case 72:
-#line 892 "mini_l.y"
+#line 965 "mini_l.y"
     {//printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
       (yyval.expressionContainer).place = (yyvsp[-1].expressionContainer).place;
       (yyval.expressionContainer).array_name = (yyvsp[-3].sval);
       (yyval.expressionContainer).type  = "ARRAY";
       (yyval.expressionContainer).code  = (yyvsp[-1].expressionContainer).code;
     }
-#line 2593 "y.tab.c"
+#line 2666 "y.tab.c"
     break;
 
   case 73:
-#line 899 "mini_l.y"
+#line 972 "mini_l.y"
     {//printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");
      // Not implemented yet (2D array)
     }
-#line 2601 "y.tab.c"
+#line 2674 "y.tab.c"
     break;
 
 
-#line 2605 "y.tab.c"
+#line 2678 "y.tab.c"
 
       default: break;
     }
@@ -2833,7 +2906,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 903 "mini_l.y"
+#line 976 "mini_l.y"
 
 int main(int argc, char ** argv)
 {
