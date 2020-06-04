@@ -1,3 +1,0 @@
-/home/aaron/cs152/phase_3/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/aaron/cs152/phase_3/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/aaron/cs152/phase_3/cmake-build-debug/CMakeFiles/phase_3.dir
