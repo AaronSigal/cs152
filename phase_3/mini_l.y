@@ -51,6 +51,7 @@ string new_temp();
   set<string> function_calls;
   int label_count = 0;
   int temp_count = 0;
+  bool store_as_param = false;
 
 %}
 
@@ -142,8 +143,14 @@ functions: /*epsilon*/
             $$.code = $1.code;
           }
 
+begin_params: BEGIN_PARAMS {
+  store_as_param = true;
+}
 
-params: BEGIN_PARAMS declarations END_PARAMS
+end_params: END_PARAMS {
+  store_as_param = false;
+}
+params: begin_params declarations end_params
         {$$.code = $2.code;}
 
 locals: BEGIN_LOCALS declarations END_LOCALS
@@ -175,10 +182,10 @@ function: FUNCTION IDENT SEMICOLON params locals body
             }
 
             // Build function code
-            string temp = $2;
 
-            o << "func " << temp << endl;
+            o << "func " << $2 << endl;
             o << $4.code << $5.code << $6.code;
+            o << "endfunc" << endl;
 
             $$.code = strdup(o.str().c_str());
           }
@@ -218,12 +225,22 @@ declaration: IDENT COMMA declaration
               {//printf("declaration -> IDENT COLON NUMBER\n");
                 string s($1);
                 Symbol sym = Symbol();
-                sym.type = "VARIABLE";
+                if (store_as_param == true) {\
+                  sym.type = "PARAM";
+                } else {
+                  sym.type = "VARIABLE";
+                }
+                
                 sym.value = "null";
                 sym.code  = "";
 
                 ostringstream o;
                 o << ". " << s << endl;
+
+                if (store_as_param == true) {
+                  o << "= " << $1 << ", $0" << endl;
+                }
+
                 sym.code = o.str();
 
                 $$.code = strdup(o.str().c_str());
@@ -269,14 +286,17 @@ statements: statements SEMICOLON
             { //printf("statements -> statement SEMICOLON statements\n");
               $$.code = $1.code;
               $$.place = $1.place;
+              $$.label = "";
             }
             | /*epsilon*/
             {//printf("statements -> epsilon\n"); 
               $$.code = "";
               $$.place = "";
+              $$.label = "";
             }
             | statements SEMICOLON statement
             {//printf("statements -> statements SEMICOLON statement\n");
+              $$.label = "";
               ostringstream o;
               o << $1.code;
               o << $3.code;
@@ -284,6 +304,7 @@ statements: statements SEMICOLON
             }
             | statement
             {//printf("statements -> statement\n");
+              $$.label = "";
               $$.code = $1.code;
               $$.place = $1.place;
 
@@ -452,12 +473,12 @@ statement: var ASSIGN expression
 
               // If the vars contains only one element and its an array
               if (string($2.type) == "ARRAY") {
-                o << ".[] < " << $2.array_name << ", " << $2.place << endl;
+                o << ".[]< " << $2.array_name << ", " << $2.place << endl;
                 $$.code = strdup(o.str().c_str());
                 $$.place = $2.place;
 
               } else if (string($2.type) == "VARIABLE"){
-                o << ". < " << $2.place << endl;
+                o << ".< " << $2.place << endl;
                 $$.code = strdup(o.str().c_str());
                 $$.place = $2.place;
               }       
@@ -476,7 +497,7 @@ statement: var ASSIGN expression
                   current_char = values[index];
                 }
 
-                o << ". < " << _o.str().c_str() << endl;
+                o << ".< " << _o.str().c_str() << endl;
                 index += 1;
               }
           }  
@@ -495,12 +516,12 @@ statement: var ASSIGN expression
 
               // If the vars contains only one element and its an array
               if (string($2.type) == "ARRAY") {
-                o << ".[] > " << $2.array_name << ", " << $2.place << endl;
+                o << ".[]> " << $2.array_name << ", " << $2.place << endl;
                 $$.code = strdup(o.str().c_str());
                 $$.place = $2.place;
 
               } else if (string($2.type) == "VARIABLE"){
-                o << ". > " << $2.place << endl;
+                o << ".> " << $2.place << endl;
                 $$.code = strdup(o.str().c_str());
                 $$.place = $2.place;
               }       
@@ -519,7 +540,7 @@ statement: var ASSIGN expression
                   current_char = values[index];
                 }
 
-                o << ". > " << _o.str().c_str() << endl;
+                o << ".> " << _o.str().c_str() << endl;
                 index += 1;
               }
           }  
