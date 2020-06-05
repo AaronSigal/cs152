@@ -634,6 +634,11 @@ term: var
         $$.code = strdup(o.str().c_str());
         $$.place = strdup(temp.c_str());
       }
+      | L_PAREN expression R_PAREN
+      {//printf("term -> SUB L_PAREN expression R_PAREN\n");
+        $$.code = $2.code;
+        $$.place = $2.place;
+      }
       | SUB var
       {//printf("term -> SUB var\n");
     }
@@ -743,7 +748,7 @@ multiplicative_expression: term MULT multiplicative_expression_0
                               sym.code = strdup( o.str().c_str() ); // Set code
                               sym.value = "";
                               add(temp, sym);
-                              
+
                               $$.code = strdup(o.str().c_str());
                               $$.place = strdup(temp.c_str());
                             }
