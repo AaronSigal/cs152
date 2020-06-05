@@ -489,10 +489,10 @@ statement: var ASSIGN expression
           if (string($3.label).length() == 0){
             o << ": " << do_label << endl;
             o << $3.code << $6.code;
-            o << "?:= " << do_label << ", " << $6.place << endl;  
+
+            o << "?:= " << do_label << ", " << $6.place << endl;
             o << ": " << skip_label << endl;
-          }
-          else {
+          } else {
             o << ": " << do_label << endl;
             o << $3.code;
 
@@ -740,10 +740,10 @@ multiplicative_expression: term MULT multiplicative_expression_0
                            }
                            | term
                            {//printf("multiplicative_expression -> term\n");
-                            if (string($1.code).length() > 0){
+                            if (string($1.code).length() > 0) {
 
                               ostringstream o;
-                              if (strcmp($1.type, "ARRAY") == 0){
+                              if (strcmp($1.type, "ARRAY") == 0) {
 
                                 string temp = new_temp();
                                 
