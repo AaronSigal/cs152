@@ -310,7 +310,7 @@ statements: statements SEMICOLON
             { //printf("statements -> statement SEMICOLON statements\n");
               $$.code = $1.code;
               $$.place = $1.place;
-              $$.label = "";
+              $$.label = $1.label;
             }
             | /*epsilon*/
             {//printf("statements -> epsilon\n"); 
@@ -321,6 +321,15 @@ statements: statements SEMICOLON
             | statements SEMICOLON statement
             {//printf("statements -> statements SEMICOLON statement\n");
               $$.label = "";
+
+              if (string($1.label).length() > 0) {
+                $$.label = $1.label;
+              } else if (string($3.label).length() > 0) {
+                $$.label = $3.label;
+              }
+
+
+
               ostringstream o;
               o << $1.code;
               o << $3.code;
@@ -328,7 +337,7 @@ statements: statements SEMICOLON
             }
             | statement
             {//printf("statements -> statement\n");
-              $$.label = "";
+              $$.label = $1.label;
               $$.code = $1.code;
               $$.place = $1.place;
 
@@ -346,6 +355,7 @@ statement: var ASSIGN expression
          {//printf("statement -> var ASSIGN expression\n");
             ostringstream o;
             $$.code = "";
+            $$.label = "";
             if (!exists(string($1.place))) {
               o << "Error on line" << lineNum << ":" << linePos << ": variable " << $1.place << " has not been delcared!" << endl;
               cout << o.str();
@@ -368,8 +378,6 @@ statement: var ASSIGN expression
 
             }
 
-            $$.label = "";
-
           }
          | IF bool-expr THEN statements ENDIF
          {//printf("statement -> IF bool-expr THEN statements ENDIF\n");
@@ -377,7 +385,14 @@ statement: var ASSIGN expression
             $$.label = "";
 
             string if_label = new_label();
-            string skip_label = new_label();
+
+            string skip_label;
+            if (string($4.label).length() > 0) {
+              skip_label = string($4.label);
+            } else {
+              skip_label = new_label();
+            }
+            
 
             ostringstream o;
 
@@ -418,7 +433,13 @@ statement: var ASSIGN expression
             $$.code = "";
             $$.label = "";
             string while_body = new_label();
-            string skip_label = new_label();
+            string skip_label;
+            if (string($4.label).length() > 0) {
+              skip_label = string($4.label);
+            } else {
+              skip_label = new_label();
+            }
+
             string while_condition = new_label();
             ostringstream o;
             
@@ -456,15 +477,20 @@ statement: var ASSIGN expression
             $$.code = "";
             $$.label = "";
 
-             string do_label = new_label();
-             string m = new_label();
-             string n = new_label();
-             ostringstream o;
+            string do_label = new_label();
+            string skip_label;
+            if (string($3.label).length() > 0) {
+              skip_label = string($3.label);
+            } else {
+              skip_label = new_label();
+            }
+            ostringstream o;
                     
           if (string($3.label).length() == 0){
             o << ": " << do_label << endl;
             o << $3.code << $6.code;
             o << "?:= " << do_label << ", " << $6.place << endl;  
+            o << ": " << skip_label << endl;
           }
           else {
             o << ": " << do_label << endl;
@@ -474,6 +500,7 @@ statement: var ASSIGN expression
             o << $6.code;
 
             o << "?:= " << do_label << ", " << $6.place << endl; // Jump back
+            o << skip_label << endl;
           }
 
           $$.code = strdup(o.str().c_str());
